@@ -4,6 +4,9 @@ matrix(Matrix, I, J, Value) :-
     nth0(J, Row, Value).
 
 
+  %#   You can use a list of lists to represent your grid
+  %# [[x1,x2,'vide'], [4,2,I42], ... [0,4,I04]]
+  %#  where each sublist has the coordinates and information on what is in each cell.
 
     print_table(H, W, L):-
       succ(W, W1),
