@@ -60,7 +60,7 @@ send(@pion1,fill_pattern, colour(blue)).
 jouerbleu(h,1) :-
 free(@pion1),
 send(@fenetre, display, new(@pion1, circle(30)), point(290,10)),
-send(@pion1,fill_pattern, colour(blue))
+send(@pion1,fill_pattern, colour(blue)).
 jouerbleu(a,2) :-
 free(@pion1),
 send(@fenetre, display, new(@pion1, circle(30)), point(10,50)),
@@ -92,7 +92,7 @@ send(@pion1,fill_pattern, colour(blue)).
 jouerbleu(h,2) :-
 free(@pion1),
 send(@fenetre, display, new(@pion1, circle(30)), point(290,50)),
-send(@pion1,fill_pattern, colour(blue))
+send(@pion1,fill_pattern, colour(blue)).
 
 %deplacement du pion 2
 jouerrouge(a,1) :-
@@ -126,7 +126,7 @@ send(@pion2,fill_pattern, colour(red)).
 jouerrouge(h,1) :-
 free(@pion2),
 send(@fenetre, display, new(@pion2, circle(30)), point(290,10)),
-send(@pion2,fill_pattern, colour(red))
+send(@pion2,fill_pattern, colour(red)).
 jouerrouge(a,2) :-
 free(@pion2),
 send(@fenetre, display, new(@pion2, circle(30)), point(10,50)),
