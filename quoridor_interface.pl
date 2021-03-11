@@ -58,10 +58,20 @@ Y1 is 50+40*(Y-1),
     send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
     send(@pion2,fill_pattern, colour(red)).
 
-mur :-
-    send(@fenetre, display, new(@mur1, box(70,10)), point(50,40)),
-    send(@mur1, fill_pattern, colour(green)).
+mur(h,X,Y):-murhorizontal(X,Y).
+mur(v,X,Y):-murvertical(X,Y).
 
+murhorizontal(X,Y):-
+X1 is 80+40*(X-1),
+Y1 is 50+40*(Y-1),
+send(@fenetre, display, new(@mur1, box(70,10)), point(Y1,X1)),
+send(@mur1, fill_pattern, colour(green)).
+
+murvertical(X,Y):-
+X1 is 50+40*(X-1),
+Y1 is 80+40*(Y-1),
+send(@fenetre, display, new(@mur1, box(10,70)), point(Y1,X1)),
+send(@mur1, fill_pattern, colour(green)).
 
 carre(X,Y,Z) :-
     send(@fenetre, display, new(@Z, box(30,30)), point(X,Y)),
@@ -113,12 +123,4 @@ init :-
     jouerbleu(1,5),
     jouerrouge(9,5).
 
-%% il faut mettre un :- pour éxecuter (vrai si..)
-:- init.
 
-
-
-% TODO :
-% Essayer de faire un for sur les cases blanches, essayer "repeat"
-% Voir pouur la taille et position des cases pour que ce soit réparti
-% Fin de fichier
