@@ -1,9 +1,10 @@
-:-dynamic listeMurs/1.
-
 % Appel de la librairie
+:- dynamic(listeMurs/1).
+:- dynamic(casesJouables/1).
 :- use_module(library(pce)).
 
-% Libération des ressources
+
+% libération des ressources
 
 liberer :-
     free(@grilleBase),
@@ -64,7 +65,7 @@ free(@X).
 
 
 %deplacements du pion 1
-jouerBleu(X,Y) :-
+jouerbleu(X,Y) :-
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
     free(@pion1),
@@ -72,35 +73,47 @@ Y1 is 50+40*(Y-1),
     send(@pion1,fill_pattern, colour(blue)).
 
 %deplacement du pion 2
-jouerRouge(X,Y) :-
+jouerrouge(X,Y) :-
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
     free(@pion2),
     send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
     send(@pion2,fill_pattern, colour(red)).
 
-
 mur(h,X,Y):-
-  retract(listeMurs([Mur|Q])),
-  murHorizontal(X,Y,Mur),
-  assert(listeMurs(Q)).
+retract(listeMurs([Mur|Q])),
+murhorizontal(X,Y,Mur),
+assert(listeMurs(Q)).
 
 mur(v,X,Y):-
-  retract(listeMurs([Mur|Q])),
-  murVertical(X,Y,Mur),
-  assert(listeMurs(Q)).
+retract(listeMurs([Mur|Q])),
+murvertical(X,Y,Mur),
+assert(listeMurs(Q)).
 
-murHorizontal(X,Y,Mur):-
-  X1 is 80+40*(X-1),
-  Y1 is 50+40*(Y-1),
-  send(@fenetre, display,new(Mur, box(70,10)), point(Y1,X1)),
-  send(Mur, fill_pattern, colour(green)).
+murhorizontal(X,Y,Mur):-
+X1 is 80+40*(X-1),
+Y1 is 50+40*(Y-1),
+send(@fenetre, display,new(Mur, box(70,10)), point(Y1,X1)),
+send(Mur, fill_pattern, colour(green)).
 
-murVertical(X,Y,Mur):-
-  X1 is 50+40*(X-1),
-  Y1 is 80+40*(Y-1),
-  send(@fenetre, display, new(Mur, box(10,70)), point(Y1,X1)),
-  send(Mur, fill_pattern, colour(green)).
+murvertical(X,Y,Mur):-
+X1 is 50+40*(X-1),
+Y1 is 80+40*(Y-1),
+send(@fenetre, display, new(Mur, box(10,70)), point(Y1,X1)),
+send(Mur, fill_pattern, colour(green)).
+
+afficherCasesJouables(ListeCases):-
+assert(casesJouables(ListeCases)),
+retract(casesJouables([Abs|Q])),
+atom_concat('carreBlanc',Abs,Carre),
+assert(casesJouables(Q)),
+retract(casesJouables([Ord|R])),
+atom_concat(Case,Ord,Carrefin).
+
+%atom_concat(Case,Mur[1],Carrefin),
+%libererCarre(Carrefin),
+%send(@Carrefin, fill_pattern, colour(blue)).
+
 
 carre(X,Y,Z) :-
     send(@fenetre, display, new(@Z, box(30,30)), point(X,Y)),
@@ -127,6 +140,7 @@ affichageLigne(X) :-
     atom_concat('carreBlanc9',X,FinalString9),
     carre(370,Y,FinalString9).
 
+
 init :-
 % Ouverture de la fenetre
     new(@fenetre, picture('Quorridor')),
@@ -148,11 +162,12 @@ init :-
     affichageLigne(8),
     affichageLigne(9),
 
-    %Création de la liste des murs
-    assert(listeMurs([@mur1,@mur2,@mur3,@mur4,@mur5,@mur6,@mur7,@mur8,@mur9,@mur10,@mur11,@mur12,@mur13,@mur14,@mur15,@mur16,@mur17,@mur18,@mur19,@mur20])),
-
+    %Création des murs
+assert(listeMurs([@mur1,@mur2,@mur3,@mur4,@mur5,@mur6,@mur7,@mur8,@mur9,@mur10,@mur11,@mur12,@mur13,@mur14,@mur15,@mur16,@mur17,@mur18,@mur19,@mur20])),
+assert(casesJouables([])),
     % Création des pions
-    jouerBleu(1,5),
-    jouerRouge(9,5).
+    jouerbleu(1,5),
+    jouerrouge(9,5).
 
 :- init.
+
