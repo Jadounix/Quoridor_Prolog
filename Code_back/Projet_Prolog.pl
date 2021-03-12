@@ -58,6 +58,7 @@ joueur(['J2', coordonnees(9,4)], 10]).
 :- dynamic(plateau/1)
 plateau([[X1,Y1],[X2,Y2],[]]).
 
-
+and(A,B):- is_true(A), is_true(B).
+caseDansPlateau(X, Y) :- and(X<9, Y<9).
 
 
