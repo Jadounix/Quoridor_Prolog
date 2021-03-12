@@ -1,7 +1,9 @@
+:-dynamic listeMurs/1.
+
 % Appel de la librairie
 :- use_module(library(pce)).
 
-% libération des ressources
+% Libération des ressources
 
 liberer :-
     free(@grilleBase),
@@ -15,6 +17,25 @@ liberer :-
     libererLigne(8),
     libererLigne(9),
     free(@mur1),
+    free(@mur2),
+    free(@mur3),
+    free(@mur4),
+    free(@mur5),
+    free(@mur6),
+    free(@mur7),
+    free(@mur8),
+    free(@mur9),
+    free(@mur10),
+    free(@mur11),
+    free(@mur12),
+    free(@mur13),
+    free(@mur14),
+    free(@mur15),
+    free(@mur16),
+    free(@mur17),
+    free(@mur18),
+    free(@mur19),
+    free(@mur20),
     free(@pion1),
     free(@pion2).
 
@@ -43,7 +64,7 @@ free(@X).
 
 
 %deplacements du pion 1
-jouerbleu(X,Y) :-
+jouerBleu(X,Y) :-
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
     free(@pion1),
@@ -51,27 +72,35 @@ Y1 is 50+40*(Y-1),
     send(@pion1,fill_pattern, colour(blue)).
 
 %deplacement du pion 2
-jouerrouge(X,Y) :-
+jouerRouge(X,Y) :-
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
     free(@pion2),
     send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
     send(@pion2,fill_pattern, colour(red)).
 
-mur(h,X,Y):-murhorizontal(X,Y).
-mur(v,X,Y):-murvertical(X,Y).
 
-murhorizontal(X,Y):-
-X1 is 80+40*(X-1),
-Y1 is 50+40*(Y-1),
-send(@fenetre, display,new(@mur1, box(70,10)), point(Y1,X1)),
-send(@mur1, fill_pattern, colour(green)).
+mur(h,X,Y):-
+  retract(listeMurs([Mur|Q])),
+  murHorizontal(X,Y,Mur),
+  assert(listeMurs(Q)).
 
-murvertical(X,Y):-
-X1 is 50+40*(X-1),
-Y1 is 80+40*(Y-1),
-send(@fenetre, display, new(@mur1, box(10,70)), point(Y1,X1)),
-send(@mur1, fill_pattern, colour(green)).
+mur(v,X,Y):-
+  retract(listeMurs([Mur|Q])),
+  murVertical(X,Y,Mur),
+  assert(listeMurs(Q)).
+
+murHorizontal(X,Y,Mur):-
+  X1 is 80+40*(X-1),
+  Y1 is 50+40*(Y-1),
+  send(@fenetre, display,new(Mur, box(70,10)), point(Y1,X1)),
+  send(Mur, fill_pattern, colour(green)).
+
+murVertical(X,Y,Mur):-
+  X1 is 50+40*(X-1),
+  Y1 is 80+40*(Y-1),
+  send(@fenetre, display, new(Mur, box(10,70)), point(Y1,X1)),
+  send(Mur, fill_pattern, colour(green)).
 
 carre(X,Y,Z) :-
     send(@fenetre, display, new(@Z, box(30,30)), point(X,Y)),
@@ -119,8 +148,11 @@ init :-
     affichageLigne(8),
     affichageLigne(9),
 
+    %Création de la liste des murs
+    assert(listeMurs([@mur1,@mur2,@mur3,@mur4,@mur5,@mur6,@mur7,@mur8,@mur9,@mur10,@mur11,@mur12,@mur13,@mur14,@mur15,@mur16,@mur17,@mur18,@mur19,@mur20])),
+
     % Création des pions
-    jouerbleu(1,5),
-    jouerrouge(9,5).
+    jouerBleu(1,5),
+    jouerRouge(9,5).
 
 :- init.
