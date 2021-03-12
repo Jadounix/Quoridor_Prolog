@@ -35,7 +35,7 @@
 %joueur(['J2', coordonnees(9,4)], 10]).
 
 %Mur
-listeMur([]).
+%listeMur([]).
 
 %_III)Fonction_jeu
 
@@ -49,7 +49,6 @@ listeMur([]).
 %joueur(nom,coordonnées,nbmur)
 
 :- dynamic(joueur/1)
-
 joueur(['J1', coordonnees(0,4), 10]).
 joueur(['J2', coordonnees(9,4)], 10]).
 
@@ -57,7 +56,8 @@ joueur(['J2', coordonnees(9,4)], 10]).
 %([positionJoueur1,positionJoueur2, [liste mur]])
 
 :- dynamic(plateau/1)
+plateau([[X1,Y1],[X2,Y2],[]]).
 
-plateau([X1,Y1],[X2,Y2],[]).
+
 
 
