@@ -64,7 +64,7 @@ mur(v,X,Y):-murvertical(X,Y).
 murhorizontal(X,Y):-
 X1 is 80+40*(X-1),
 Y1 is 50+40*(Y-1),
-send(@fenetre, display, new(@mur1, box(70,10)), point(Y1,X1)),
+send(@fenetre, display,new(@mur1, box(70,10)), point(Y1,X1)),
 send(@mur1, fill_pattern, colour(green)).
 
 murvertical(X,Y):-
@@ -123,4 +123,4 @@ init :-
     jouerbleu(1,5),
     jouerrouge(9,5).
 
-
+:- init.
