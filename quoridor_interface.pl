@@ -5,18 +5,9 @@
 
 
 % libération des ressources
-
 liberer :-
     free(@grilleBase),
-    libererLigne(1),
-    libererLigne(2),
-    libererLigne(3),
-    libererLigne(4),
-    libererLigne(5),
-    libererLigne(6),
-    libererLigne(7),
-    libererLigne(8),
-    libererLigne(9),
+    libererGrille,
     free(@mur1),
     free(@mur2),
     free(@mur3),
@@ -39,6 +30,17 @@ liberer :-
     free(@mur20),
     free(@pion1),
     free(@pion2).
+
+libererGrille:-
+libererLigne(1),
+libererLigne(2),
+libererLigne(3),
+libererLigne(4),
+libererLigne(5),
+libererLigne(6),
+libererLigne(7),
+libererLigne(8),
+libererLigne(9).
 
 libererLigne(X):-
     atom_concat('carreBlanc1',X,Carre),
@@ -64,8 +66,10 @@ libererCarre(X):-
 free(@X).
 
 
+
 %deplacements du pion 1
-jouerbleu(X,Y) :-
+bleu(X,Y) :-
+grilleBlanche,
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
     free(@pion1),
@@ -73,7 +77,8 @@ Y1 is 50+40*(Y-1),
     send(@pion1,fill_pattern, colour(blue)).
 
 %deplacement du pion 2
-jouerrouge(X,Y) :-
+rouge(X,Y) :-
+grilleBlanche,
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
     free(@pion2),
@@ -81,11 +86,13 @@ Y1 is 50+40*(Y-1),
     send(@pion2,fill_pattern, colour(red)).
 
 mur(h,X,Y):-
+grilleBlanche,
 retract(listeMurs([Mur|Q])),
 murhorizontal(X,Y,Mur),
 assert(listeMurs(Q)).
 
 mur(v,X,Y):-
+grilleBlanche,
 retract(listeMurs([Mur|Q])),
 murvertical(X,Y,Mur),
 assert(listeMurs(Q)).
@@ -102,17 +109,55 @@ Y1 is 80+40*(Y-1),
 send(@fenetre, display, new(Mur, box(10,70)), point(Y1,X1)),
 send(Mur, fill_pattern, colour(green)).
 
-afficherCasesJouables(ListeCases):-
+afficherCases(ListeCases):-
 assert(casesJouables(ListeCases)),
 retract(casesJouables([Abs|Q])),
-atom_concat('carreBlanc',Abs,Carre),
 assert(casesJouables(Q)),
 retract(casesJouables([Ord|R])),
-atom_concat(Case,Ord,Carrefin).
+caseJouable(Abs,Ord),
+afficherCases(R).
 
-%atom_concat(Case,Mur[1],Carrefin),
-%libererCarre(Carrefin),
-%send(@Carrefin, fill_pattern, colour(blue)).
+caseJouable(X,Y):-
+atom_concat('carreBlanc',Y,Carre),
+atom_concat(Carre,X,Carrefin),
+colorerCase(Carrefin,yellow).
+
+colorerCase(Z,C):-
+send(@Z, fill_pattern, colour(C)).
+
+
+ligneBlanche(X):-
+    atom_concat('carreBlanc1',X,Carre),
+colorerCase(Carre,white),
+    atom_concat('carreBlanc2',X,Carre2),
+colorerCase(Carre2,white),
+    atom_concat('carreBlanc3',X,Carre3),
+colorerCase(Carre3,white),
+    atom_concat('carreBlanc4',X,Carre4),
+colorerCase(Carre4,white),
+    atom_concat('carreBlanc5',X,Carre5),
+colorerCase(Carre5,white),
+    atom_concat('carreBlanc6',X,Carre6),
+colorerCase(Carre6,white),
+    atom_concat('carreBlanc7',X,Carre7),
+colorerCase(Carre7,white),
+    atom_concat('carreBlanc8',X,Carre8),
+colorerCase(Carre8,white),
+    atom_concat('carreBlanc9',X,Carre9),
+colorerCase(Carre9,white).
+
+%grille blanche
+grilleBlanche:-
+ligneBlanche(1),
+ligneBlanche(2),
+ligneBlanche(3),
+ligneBlanche(4),
+ligneBlanche(5),
+ligneBlanche(6),
+ligneBlanche(7),
+ligneBlanche(8),
+ligneBlanche(9).
+
 
 
 carre(X,Y,Z) :-
@@ -161,13 +206,12 @@ init :-
     affichageLigne(7),
     affichageLigne(8),
     affichageLigne(9),
-
     %Création des murs
 assert(listeMurs([@mur1,@mur2,@mur3,@mur4,@mur5,@mur6,@mur7,@mur8,@mur9,@mur10,@mur11,@mur12,@mur13,@mur14,@mur15,@mur16,@mur17,@mur18,@mur19,@mur20])),
-assert(casesJouables([])),
+%assert(casesJouables([1,4,2,5,1,6])),
     % Création des pions
     jouerbleu(1,5),
     jouerrouge(9,5).
-
+    
 :- init.
 
