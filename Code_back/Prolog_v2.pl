@@ -13,6 +13,8 @@
 :- asserta(
     etat([1,5,10],[2,77,10],[])
 ).
+
+
 % on met dans la pile un état avec 3 valeurs : J1,J2,ListeMursRestants
 %Joueur : [numero, position, nbMursRestants]
 %donc ici 2 joueurs : [J1, sur la case 5, 10murs restants] et [J2, sur la case 77, 10 murs restants]
@@ -54,6 +56,11 @@ caseLibre(X) :-
     etat([_,P1,_],[_,P2,_],_), %on assigne à P1 la position du joueur 1, et P2 celle du joueur 2
     X =\= P1, X =\=P2,!. %Si X != P1 et X != P2 
 %Ici, le ,! demande de ne pas regarder au delà de l'état dans la pile dynamic
+
+
+
+deplacer(Dir, ) :-
+    X==Bas Y is X+1, caseAdjacente(X,Y) ; X6
 
 
 
