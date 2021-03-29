@@ -62,16 +62,21 @@ libererCarre(X):-
     free(@X).
 
 %vérifier qu'aucun bout de mur n'est sur la case X,Y
+murvOccupe(X,Y) :-
+    (
+     murs(v,X,Y);
+     X1 is X-1, murs(v,X1,Y);
+     X1 is X+1, murs(v,X1,Y)
+    ),
+    write('\n Il y a deja un mur a cet emplacement. Veuillez recommencer. \n').
+
+
 murhOccupe(X,Y) :-
     (murs(h,X,Y);
-    murs(v,X,Y);
-    X1 is X-1, murs(h,X1,Y);
-    X1 is X+1, murs(h,X1,Y)),write('Il y a deja un mur a cet emplacement').
-murvOccupe(X,Y) :-
-    (murs(h,X,Y);
-    murs(v,X,Y);
-    Y1 is Y-1, murs(v,X,Y1);
-    Y1 is Y+1, murs(v,X,Y1)),write('Il y a deja un mur a cet emplacement').
+    Y1 is Y-1, murs(h,X,Y1);
+    Y1 is Y+1, murs(h,X,Y1)
+    ),
+    write('Il y a deja un mur a cet emplacement. Veuillez recommencer.').
 
 %verifier que aucun joueur n'est sur la case X,Y
 caseOccupee(X,Y) :-
@@ -159,43 +164,49 @@ not(victoire(2, X)),
     joueur(_,[A,O],_),
     afficherCases(A,O),!.
 
+%poser un mur horizontal
 mur(h,X,Y):-
-    not(murhOccupe(X,Y)),
+    X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
+    not(murhOccupe(X,Y)), %si pas deja un mur en X et/ou Y
     grilleBlanche,
     joueur(J,[A,O],N),
-    N > 0,
+    N > 0, %si le joueur a encore des murs a placer
     retract(joueur(J,[A,O],N)),
     N1 is N-1,
     retract(listeMurs([Mur|Q])),
     murhorizontal(X,Y,Mur),
     asserta(listeMurs(Q)),
-    assert(joueur(J,[A,O],N1)),
-    assert(murs(h,X,Y)),
+    assert(joueur(J,[A,O],N1)), %on update le nb de murs restants du joueur
+    assert(murs(h,X,Y)), %update la liste des murs
     (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
     afficherCases(Ab,Or),!.
 
+%poser un mur horizontal
 mur(v,X,Y):-
-    not(murvOccupe(X,Y)),
+    X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
+    not(murvOccupe(X,Y)), %si pas deja un mur en X et/ou Y
     grilleBlanche,
     joueur(J,[A,O],N),
-    N > 0,
+    N > 0, %si le joueur a encore des murs a placer
     retract(joueur(J,[A,O],N)),
     N1 is N-1,
     retract(listeMurs([Mur|Q])),
     murvertical(X,Y,Mur),
     asserta(listeMurs(Q)),
-    assert(joueur(J,[A,O],N1)),
-    assert(murs(v,X,Y)),
+    assert(joueur(J,[A,O],N1)), %on update le nb de murs restants du joueur
+    assert(murs(v,X,Y)), %update la liste des murs
     (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
     afficherCases(Ab,Or),!.
 
 
+%affichage mur horizontal
 murhorizontal(X,Y,Mur):-
     X1 is 80+40*(X-1),
     Y1 is 50+40*(Y-1),
     send(@fenetre, display,new(Mur, box(70,10)), point(Y1,X1)),
     send(Mur, fill_pattern, colour(green)).
 
+%affichage mur vertical
 murvertical(X,Y,Mur):-
     X1 is 50+40*(X-1),
     Y1 is 80+40*(Y-1),
@@ -254,7 +265,7 @@ colorerCase(Z,C):-
     send(@Z, fill_pattern, colour(C)).
 
 finJeu :-
-    write('Voulez-vous recommencer ? -oui - non').
+    write('FIN DE PARTIE \nVoulez-vous recommencer ? -oui - non').
 
 %l'utilisateur choisit de recommencer
 oui :- 
