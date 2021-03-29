@@ -102,9 +102,8 @@ bas:-
     caseAccessible(Z,Y),!,
     not(bloqueBas(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Z,Y);J==2,rouge(Z,Y)),
-    not(victoire(J,X)).
-
+    (J==1,bleu(Z,Y);J==2,rouge(Z,Y)).
+    %not(victoire(J,X)).
 
 haut :-
     joueur(J,[X,Y],N),
@@ -112,8 +111,8 @@ haut :-
     caseAccessible(Z,Y),!,
     not(bloqueHaut(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Z,Y);J==2,rouge(Z,Y)),
-    not(victoire(J,Z)).
+    (J==1,bleu(Z,Y);J==2,rouge(Z,Y)).
+    %not(victoire(J,Z)).
 
 droite:-
     joueur(J,[X,Y],N),
@@ -122,8 +121,8 @@ droite:-
     not(bloqueDroite(X,Y)),
     retract(joueur(J,[X,Y],N)),
     (J==1, bleu(X,Z);
-     J==2,rouge(X,Z)),
-    not(victoire(J,X)).
+     J==2,rouge(X,Z)).
+    %not(victoire(J,X)).
 
 gauche :-
     joueur(J,[X,Y],N),
@@ -131,8 +130,8 @@ gauche :-
     caseAccessible(X,Z),!,
     not(bloqueGauche(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(X,Z);J==2,rouge(X,Z)),
-    not(victoire(J,Z)).
+    (J==1,bleu(X,Z);J==2,rouge(X,Z)).
+    %not(victoire(J,Z)).
 
 %deplacements du pion 1
 bleu(X,Y) :-
@@ -143,20 +142,22 @@ Y1 is 50+40*(Y-1),
     free(@pion1),
     send(@fenetre, display, new(@pion1, circle(30)), point(Y1,X1)),
     send(@pion1,fill_pattern, colour(blue)),
-joueur(_,[A,O],_),
-afficherCases(A,O),!.
+not(victoire(1, X)),
+    joueur(_,[A,O],_),
+    afficherCases(A,O),!.
 
 %deplacement du pion 2
 rouge(X,Y) :-
-assert(joueur(2,[X,Y],10)),
+assert(joueur(2,[X,Y],10)), %penser à introduire une variable nbMurs
 grilleBlanche,
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
     free(@pion2),
     send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
     send(@pion2,fill_pattern, colour(red)),
-joueur(_,[A,O],_),
-afficherCases(A,O),!.
+not(victoire(2, X)),
+    joueur(_,[A,O],_),
+    afficherCases(A,O),!.
 
 mur(h,X,Y):-
     not(murhOccupe(X,Y)),
@@ -239,26 +240,37 @@ caseJouable(X,Y,h):-
     1=:=1.
 caseJouable(X,Y,b):-
     X1 is X-1,
-    caseAccessible(X,Y),
-    not(bloqueBas(X1,Y)),
-    atom_concat('carreBlanc',Y,Carre),
-    atom_concat(Carre,X,Carrefin),
-    colorerCase(Carrefin,yellow);
+        caseAccessible(X,Y),
+        not(bloqueBas(X1,Y)),
+        atom_concat('carreBlanc',Y,Carre),
+        atom_concat(Carre,X,Carrefin),
+        colorerCase(Carrefin,yellow);
     1=:=1.
 
 
 colorerCase(Z,C):-
     send(@Z, fill_pattern, colour(C)).
 
+finJeu :-
+    write(' Voulez-vous recommencer ? -oui - non').
+
+%l'utilisateur choisit de recommencer
+oui :- 
+    init.
+
+non :-
+    write('Merci d avoir joue ! Fin du jeu').
 
 % valable pour 2 joueurs
 victoire(1,X) :-
     X =:= 9,
-    write('Joueur 1 a gagne !'),init.
+    write('Joueur 1 a gagne !'),
+    finJeu.
 
 victoire(2,X) :-
     X =:= 1,
-    write('Joueur 2 a gagne !'),init.
+    write('Joueur 2 a gagne !'),
+    finJeu.
 
 ligneBlanche(X):-
     atom_concat('carreBlanc1',X,Carre),
@@ -345,8 +357,10 @@ init :-
     assert(murs()),
     consignes,
         % Création des pions
-        bleu(1,5),
-        rouge(9,5).
+        %bleu(1,5),
+        %rouge(9,5).
+        bleu(8,5),
+        rouge(2,5).
 
 :- initfenetre.
 :- init.
