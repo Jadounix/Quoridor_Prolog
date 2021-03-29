@@ -9,7 +9,7 @@
 :- dynamic(casesJouables/1).
 :- use_module(library(pce)).
 
-%consinges
+%consignes
 consignes :-
 write('Votre objectif est de toucher le mur oppose a celui de depart.\n'),
 write('Le premier joueur est le joueur bleu.\n'),
@@ -102,7 +102,7 @@ bas:-
     caseAccessible(Z,Y),!,
     not(bloqueBas(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Z,Y);J==2,rouge(Z,Y)).
+    (J==1,bleu(Z,Y, N);J==2,rouge(Z,Y, N)).
     %not(victoire(J,X)).
 
 haut :-
@@ -111,7 +111,7 @@ haut :-
     caseAccessible(Z,Y),!,
     not(bloqueHaut(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Z,Y);J==2,rouge(Z,Y)).
+    (J==1,bleu(Z,Y, N);J==2,rouge(Z,Y, N)).
     %not(victoire(J,Z)).
 
 droite:-
@@ -120,8 +120,8 @@ droite:-
     caseAccessible(X,Z),!,
     not(bloqueDroite(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1, bleu(X,Z);
-     J==2,rouge(X,Z)).
+    (J==1, bleu(Z,Y, N);
+     J==2,rouge(X,Z, N)).
     %not(victoire(J,X)).
 
 gauche :-
@@ -130,12 +130,12 @@ gauche :-
     caseAccessible(X,Z),!,
     not(bloqueGauche(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(X,Z);J==2,rouge(X,Z)).
+    (J==1,bleu(X,Z,N);J==2,rouge(X,Z, N)).
     %not(victoire(J,Z)).
 
 %deplacements du pion 1
-bleu(X,Y) :-
-assert(joueur(1,[X,Y],10)),
+bleu(X,Y,N) :-
+assert(joueur(1,[X,Y],N)),
 grilleBlanche,
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
@@ -147,8 +147,8 @@ not(victoire(1, X)),
     afficherCases(A,O),!.
 
 %deplacement du pion 2
-rouge(X,Y) :-
-assert(joueur(2,[X,Y],10)), %penser à introduire une variable nbMurs
+rouge(X,Y, N) :-
+assert(joueur(2,[X,Y],N)), 
 grilleBlanche,
 X1 is 50+40*(X-1),
 Y1 is 50+40*(Y-1),
@@ -163,6 +163,7 @@ mur(h,X,Y):-
     not(murhOccupe(X,Y)),
     grilleBlanche,
     joueur(J,[A,O],N),
+    N > 0,
     retract(joueur(J,[A,O],N)),
     N1 is N-1,
     retract(listeMurs([Mur|Q])),
@@ -177,6 +178,7 @@ mur(v,X,Y):-
     not(murvOccupe(X,Y)),
     grilleBlanche,
     joueur(J,[A,O],N),
+    N > 0,
     retract(joueur(J,[A,O],N)),
     N1 is N-1,
     retract(listeMurs([Mur|Q])),
@@ -252,7 +254,7 @@ colorerCase(Z,C):-
     send(@Z, fill_pattern, colour(C)).
 
 finJeu :-
-    write(' Voulez-vous recommencer ? -oui - non').
+    write('Voulez-vous recommencer ? -oui - non').
 
 %l'utilisateur choisit de recommencer
 oui :- 
@@ -264,12 +266,12 @@ non :-
 % valable pour 2 joueurs
 victoire(1,X) :-
     X =:= 9,
-    write('Joueur 1 a gagne !'),
+    write('Joueur 1 a gagne ! '),
     finJeu.
 
 victoire(2,X) :-
     X =:= 1,
-    write('Joueur 2 a gagne !'),
+    write('Joueur 2 a gagne ! '),
     finJeu.
 
 ligneBlanche(X):-
@@ -357,10 +359,10 @@ init :-
     assert(murs()),
     consignes,
         % Création des pions
-        %bleu(1,5),
-        %rouge(9,5).
-        bleu(8,5),
-        rouge(2,5).
+        %bleu(1,5, 10),
+        %rouge(9,5, 10).
+        bleu(8,5, 10),
+        rouge(2,5, 10).
 
 :- initfenetre.
 :- init.
