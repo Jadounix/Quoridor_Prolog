@@ -97,15 +97,6 @@ bloqueGauche(X,Y) :-
 bloqueDroite(X,Y) :-
     murs(v,X,Y) ;
     Z is X-1, murs(v,Z,Y).
-/*
-faceAface(X, Y) :-
-    joueur(_, (X, Y), _),
-    Z is Y+1,
-    joueur(_, (X, Z), _).
-
-sautePion() :-
-    
-    .*/
 
 caseAccessible(X,Y) :-
     X =< 9,X > 0,Y =< 9,Y > 0,not(caseOccupee(X,Y)).
@@ -122,29 +113,30 @@ bas:-
 haut :-
     joueur(J,[X,Y],N),
     Z is X-1,
-    caseAccessible(Z,Y),!,
+    (caseAccessible(Z,Y), Zdef is Z; Z2 is X-2, caseAccessible(Z2,Y), Zdef is Z2),!,
     not(bloqueHaut(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Z,Y, N);J==2,rouge(Z,Y, N)).
+    (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
     %not(victoire(J,Z)).
 
 droite:-
     joueur(J,[X,Y],N),
     Z is Y+1,
-    caseAccessible(X,Z),!,
+    (caseAccessible(X,Z), Zdef is Z; Z2 is Y+2, caseAccessible(X,Z2), Zdef is Z2),!,
     not(bloqueDroite(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1, bleu(Z,Y, N);
-     J==2,rouge(X,Z, N)).
+    (J==1, bleu(X,Zdef, N);
+     J==2,rouge(X,Zdef, N)).
     %not(victoire(J,X)).
 
-gauche :-
+gauche:-
     joueur(J,[X,Y],N),
     Z is Y-1,
-    caseAccessible(X,Z),!,
+    (caseAccessible(X,Z), Zdef is Z; Z2 is Y-2, caseAccessible(X,Z2), Zdef is Z2),!,
     not(bloqueGauche(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(X,Z,N);J==2,rouge(X,Z, N)).
+    (J==1, bleu(X,Zdef, N);
+     J==2,rouge(X,Zdef, N)).
     %not(victoire(J,Z)).
 
 %deplacements du pion 1
