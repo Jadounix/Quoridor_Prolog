@@ -14,7 +14,7 @@ consignes :-
 write('Votre objectif est de toucher le mur oppose a celui de depart.\n'),
 write('Le premier joueur est le joueur bleu.\n'),
 write('Pour jouer, vous avez deux possibilites : deplacer votre pion ou poser un mur (jusqu a 10 chacun).\n'),
-write('Vous pouvez deplacer votre pion uniquement sur les cases en jaune, en tapant les commandes suivantes : "bas." ou "haut." ou "gauche." ou "droite." en fonction de l endroit ou vous souhaitez mettre votre pion.\n'),
+write('Vous pouvez deplacer votre pion uniquement sur les cases en jaune, en tapant les commandes suivantes : "bas(N°J)." ou "haut(N°J)." ou "gauche(N°J)." ou "droite(N°J)." en fonction de l endroit ou vous souhaitez mettre votre pion.\n'),
 write('Pour les murs, par exemple pour poser un mur horizontal sous les cases 1 et 2 de la ligne 1, vous devez utiliser la commande "mur(h,1,1)." \n'),
 write('Pour poser un mur vertical a droite des cases 2 et 3 de la colonne 5, vous devez utiliser la commande "mur(v,2,5)." \n'),
 write('Vous ne  pouvez pas poser de mur sur un endroit deja utilise.\n'),
@@ -101,43 +101,39 @@ bloqueDroite(X,Y) :-
 caseAccessible(X,Y) :-
     X =< 9,X > 0,Y =< 9,Y > 0,not(caseOccupee(X,Y)).
 
-bas:-
+bas(J):-
     joueur(J,[X,Y],N),
     Z is X+1,
-    (caseAccessible(Z,Y), Zdef is Z; Z2 is X+2, caseAccessible(Z2,Y), Zdef is Z2),!,
-    not(bloqueBas(X,Y)),
+    (   caseAccessible(Z,Y), not(bloqueBas(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+        Z2 is X+2, caseAccessible(Z2,Y), not(bloqueBas(X,Y)), not(bloqueBas(Z,Y)), Zdef is Z2), 
     retract(joueur(J,[X,Y],N)),
     (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
-    %not(victoire(J,X)).
 
-haut :-
+haut(J) :-
     joueur(J,[X,Y],N),
     Z is X-1,
-    (caseAccessible(Z,Y), Zdef is Z; Z2 is X-2, caseAccessible(Z2,Y), Zdef is Z2),!,
-    not(bloqueHaut(X,Y)),
+    (caseAccessible(Z,Y), not(bloqueHaut(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is X-2, caseAccessible(Z2,Y), not(bloqueHaut(X,Y)), not(bloqueHaut(Z,Y)), Zdef is Z2), %si case libre et pas de mur en X+1 : Zdef prend Z2
     retract(joueur(J,[X,Y],N)),
     (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
-    %not(victoire(J,Z)).
 
-droite:-
+droite(J):-
     joueur(J,[X,Y],N),
     Z is Y+1,
-    (caseAccessible(X,Z), Zdef is Z; Z2 is Y+2, caseAccessible(X,Z2), Zdef is Z2),!,
-    not(bloqueDroite(X,Y)),
+    (caseAccessible(X,Z), not(bloqueDroite(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is Y+2, caseAccessible(X,Z2), not(bloqueDroite(X,Y)), not(bloqueDroite(X,Z)), Zdef is Z2), %si case libre et pas de mur en Y+1 : Zdef prend Z2
     retract(joueur(J,[X,Y],N)),
     (J==1, bleu(X,Zdef, N);
      J==2,rouge(X,Zdef, N)).
-    %not(victoire(J,X)).
 
-gauche:-
+gauche(J):-
     joueur(J,[X,Y],N),
     Z is Y-1,
-    (caseAccessible(X,Z), Zdef is Z; Z2 is Y-2, caseAccessible(X,Z2), Zdef is Z2),!,
-    not(bloqueGauche(X,Y)),
+    (caseAccessible(X,Z), not(bloqueGauche(X,Y)), Zdef is Z;%si case libre et pas de mur : Zdef prend Z
+     Z2 is Y-2, caseAccessible(X,Z2), not(bloqueGauche(X,Y)), not(bloqueGauche(X,Z)),  Zdef is Z2), %si case libre et pas de mur en Y+1 : Zdef prend Z2
     retract(joueur(J,[X,Y],N)),
     (J==1, bleu(X,Zdef, N);
      J==2,rouge(X,Zdef, N)).
-    %not(victoire(J,Z)).
 
 %deplacements du pion 1
 bleu(X,Y,N) :-
@@ -373,7 +369,7 @@ init :-
         % Création des pions
         %bleu(1,5, 10),
         %rouge(9,5, 10).
-        bleu(1,5, 10),
+        bleu(3,5, 10),
         rouge(2,5, 10).
 
 :- initfenetre.
