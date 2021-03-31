@@ -97,6 +97,15 @@ bloqueGauche(X,Y) :-
 bloqueDroite(X,Y) :-
     murs(v,X,Y) ;
     Z is X-1, murs(v,Z,Y).
+/*
+faceAface(X, Y) :-
+    joueur(_, (X, Y), _),
+    Z is Y+1,
+    joueur(_, (X, Z), _).
+
+sautePion() :-
+    
+    .*/
 
 caseAccessible(X,Y) :-
     X =< 9,X > 0,Y =< 9,Y > 0,not(caseOccupee(X,Y)).
