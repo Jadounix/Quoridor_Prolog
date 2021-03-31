@@ -104,10 +104,10 @@ caseAccessible(X,Y) :-
 bas:-
     joueur(J,[X,Y],N),
     Z is X+1,
-    caseAccessible(Z,Y),!,
+    (caseAccessible(Z,Y), Zdef is Z; Z2 is X+2, caseAccessible(Z2,Y), Zdef is Z2),!,
     not(bloqueBas(X,Y)),
     retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Z,Y, N);J==2,rouge(Z,Y, N)).
+    (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
     %not(victoire(J,X)).
 
 haut :-
@@ -140,29 +140,29 @@ gauche :-
 
 %deplacements du pion 1
 bleu(X,Y,N) :-
-assert(joueur(1,[X,Y],N)),
-grilleBlanche,
-X1 is 50+40*(X-1),
-Y1 is 50+40*(Y-1),
-    free(@pion1),
-    send(@fenetre, display, new(@pion1, circle(30)), point(Y1,X1)),
-    send(@pion1,fill_pattern, colour(blue)),
-not(victoire(1, X)),
-    joueur(_,[A,O],_),
-    afficherCases(A,O),!.
+    assert(joueur(1,[X,Y],N)),
+    grilleBlanche,
+    X1 is 50+40*(X-1),
+    Y1 is 50+40*(Y-1),
+        free(@pion1),
+        send(@fenetre, display, new(@pion1, circle(30)), point(Y1,X1)),
+        send(@pion1,fill_pattern, colour(blue)),
+    not(victoire(1, X)),
+        joueur(_,[A,O],_),
+        afficherCases(A,O),!.
 
 %deplacement du pion 2
 rouge(X,Y, N) :-
-assert(joueur(2,[X,Y],N)), 
-grilleBlanche,
-X1 is 50+40*(X-1),
-Y1 is 50+40*(Y-1),
-    free(@pion2),
-    send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
-    send(@pion2,fill_pattern, colour(red)),
-not(victoire(2, X)),
-    joueur(_,[A,O],_),
-    afficherCases(A,O),!.
+    assert(joueur(2,[X,Y],N)), 
+    grilleBlanche,
+    X1 is 50+40*(X-1),
+    Y1 is 50+40*(Y-1),
+        free(@pion2),
+        send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
+        send(@pion2,fill_pattern, colour(red)),
+    not(victoire(2, X)),
+        joueur(_,[A,O],_),
+        afficherCases(A,O),!.
 
 %poser un mur horizontal
 mur(h,X,Y):-
@@ -372,7 +372,7 @@ init :-
         % Création des pions
         %bleu(1,5, 10),
         %rouge(9,5, 10).
-        bleu(8,5, 10),
+        bleu(1,5, 10),
         rouge(2,5, 10).
 
 :- initfenetre.
