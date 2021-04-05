@@ -11,19 +11,20 @@
 
 %consignes
 consignes :-
-write('Votre objectif est de toucher le mur oppose a celui de depart.\n'),
-write('Le premier joueur est le joueur bleu.\n'),
-write('Pour jouer, vous avez deux possibilites : deplacer votre pion ou poser un mur (jusqu a 10 chacun).\n'),
-write('Vous pouvez deplacer votre pion uniquement sur les cases en jaune, en tapant les commandes suivantes : "bas(N°J)." ou "haut(N°J)." ou "gauche(N°J)." ou "droite(N°J)." en fonction de l endroit ou vous souhaitez mettre votre pion.\n'),
-write('Pour les murs, par exemple pour poser un mur horizontal sous les cases 1 et 2 de la ligne 1, vous devez utiliser la commande "mur(h,1,1)." \n'),
-write('Pour poser un mur vertical a droite des cases 2 et 3 de la colonne 5, vous devez utiliser la commande "mur(v,2,5)." \n'),
-write('Vous ne  pouvez pas poser de mur sur un endroit deja utilise.\n'),
-write('Vous pouvez revoir les consignes a tout moment en tapant : "consignes."\n\n\n\n').
+    write('Votre objectif est de toucher le mur oppose a celui de depart.\n'),
+    write('Le premier joueur est le joueur bleu.\n'),
+    write('Pour jouer, vous avez deux possibilites : deplacer votre pion ou poser un mur (jusqu a 10 chacun).\n'),
+    write('Vous pouvez deplacer votre pion uniquement sur les cases en jaune, en tapant les commandes suivantes : "bas(N°J)." ou "haut(N°J)." ou "gauche(N°J)." ou "droite(N°J)." en fonction de l endroit ou vous souhaitez mettre votre pion.\n'),
+    write('Pour les murs, par exemple pour poser un mur horizontal sous les cases 1 et 2 de la ligne 1, vous devez utiliser la commande "mur(h,1,1)." \n'),
+    write('Pour poser un mur vertical a droite des cases 2 et 3 de la colonne 5, vous devez utiliser la commande "mur(v,2,5)." \n'),
+    write('Vous ne  pouvez pas poser de mur sur un endroit deja utilise.\n'),
+    write('Vous pouvez revoir les consignes a tout moment en tapant : "consignes."\n\n\n\n').
 
 
 %restart le programme
-restart :- retractall(joueur(_,_,_)),
-retractall(murs(_,_,_)).
+restart :- 
+    retractall(joueur(_,_,_)),
+    retractall(murs(_,_,_)).
 
 %Joueur(Id,[X,Y], nbMursRestants)
 :- dynamic (joueur/3).
@@ -86,6 +87,19 @@ murPerpendiculaire(X,Y) :-
 
 
 
+%verifier que les murs ne bloqueront pas l'acces a la ligne d'arrivee apres ajout
+% <=> ne doit pas y avoir un chemin de X=1 à X=9 via des Y ?
+/*ligneArriveeAccessible (X,Y):-
+    ( 
+    ),
+    write("Vous ne pouvez pas bloquer l'acces à la ligne d'arrivee.").*/
+
+
+
+
+
+
+
 %verifier que aucun joueur n'est sur la case X,Y
 caseOccupee(X,Y) :-
     joueur(_,[X,Y],_).
@@ -109,6 +123,9 @@ bloqueDroite(X,Y) :-
 caseAccessible(X,Y) :-
     X =< 9,X > 0,Y =< 9,Y > 0,not(caseOccupee(X,Y)).
 
+
+
+%Faire se deplacer le joueur J en bas
 bas(J):-
     joueur(J,[X,Y],N),
     Z is X+1,
@@ -117,6 +134,7 @@ bas(J):-
     retract(joueur(J,[X,Y],N)),
     (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
 
+%Faire se deplacer le joueur J en haut
 haut(J) :-
     joueur(J,[X,Y],N),
     Z is X-1,
@@ -125,6 +143,8 @@ haut(J) :-
     retract(joueur(J,[X,Y],N)),
     (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
 
+
+%Faire se deplacer le joueur J a droite
 droite(J):-
     joueur(J,[X,Y],N),
     Z is Y+1,
@@ -134,6 +154,7 @@ droite(J):-
     (J==1, bleu(X,Zdef, N);
      J==2,rouge(X,Zdef, N)).
 
+%Faire se deplacer le joueur J a gauche
 gauche(J):-
     joueur(J,[X,Y],N),
     Z is Y-1,
@@ -143,7 +164,8 @@ gauche(J):-
     (J==1, bleu(X,Zdef, N);
      J==2,rouge(X,Zdef, N)).
 
-%deplacements du pion 1
+
+%deplacements du pion 1 sur l'interface
 bleu(X,Y,N) :-
     assert(joueur(1,[X,Y],N)),
     grilleBlanche,
@@ -156,7 +178,7 @@ bleu(X,Y,N) :-
         joueur(_,[A,O],_),
         afficherCases(A,O),!.
 
-%deplacement du pion 2
+%deplacement du pion 2 sur l'interface
 rouge(X,Y, N) :-
     assert(joueur(2,[X,Y],N)), 
     grilleBlanche,
@@ -173,6 +195,7 @@ rouge(X,Y, N) :-
 
 %poser un mur horizontal
 mur(h,X,Y):-
+    X > 0, Y > 0, %positionne le mur dans le plateau
     X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
     not(murhOccupe(X,Y)), %si pas deja un mur en X et/ou Y
     not(murPerpendiculaire(X,Y)),%si pas un mur perpendiculaire
@@ -191,6 +214,7 @@ mur(h,X,Y):-
 
 %poser un mur horizontal
 mur(v,X,Y):-
+    X > 0, Y > 0, %positionne le mur dans le plateau
     X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
     not(murvOccupe(X,Y)), %si pas deja un mur en X et/ou Y
     not(murPerpendiculaire(X,Y)),%si pas un mur perpendiculaire
@@ -229,12 +253,13 @@ afficherCases(X,Y):-
     X2 is X+1, 
     Y1 is Y-1, 
     Y2 is Y+1,
-    (caseJouable(X,Y1,g),
-    caseJouable(X,Y2,d),
-    caseJouable(X1,Y,h),
-    caseJouable(X2,Y,b)),
+    ((caseJouable(X,Y1,g); Y4 is Y-2, caseJouable(X,Y4,g)), %pourquoi marche pas ?
+    (caseJouable(X,Y2,d); Y3 is Y+2, caseJouable(X,Y3,d)),
+    (caseJouable(X1,Y,h); X3 is X-2, caseJouable(X3,Y,h)), %si la case du haut est pas jouable, est-ce que celle encore au dessus l'est ?
+    (caseJouable(X2,Y,b); X4 is X+2, caseJouable(X4,Y,b))),
     joueur(J,[_,_],_),
-    (J==1, write('C est au tour du joueur 1 de jouer.'); J==2, write('C est au tour du joueur 2 de jouer.')).
+    (J==1, write('C est au tour du joueur 1 de jouer.'); 
+     J==2, write('C est au tour du joueur 2 de jouer.')).
 
 caseJouable(X,Y,g):-
     Y1 is Y+1,
@@ -242,32 +267,32 @@ caseJouable(X,Y,g):-
         not(bloqueGauche(X,Y1)),
         atom_concat('carreBlanc',Y,Carre),
         atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow);
-    1=:=1.
+        colorerCase(Carrefin,yellow).
+    %1=:=1.
 caseJouable(X,Y,d):-
     Y1 is Y-1,
         caseAccessible(X,Y),
         not(bloqueDroite(X,Y1)),
         atom_concat('carreBlanc',Y,Carre),
         atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow);
-    1=:=1.
+        colorerCase(Carrefin,yellow).
+    %1=:=1.
 caseJouable(X,Y,h):-
     X1 is X+1,
         caseAccessible(X,Y),
         not(bloqueHaut(X1,Y)),
         atom_concat('carreBlanc',Y,Carre),
         atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow);
-    1=:=1.
+        colorerCase(Carrefin,yellow).
+    %1=:=1.
 caseJouable(X,Y,b):-
     X1 is X-1,
         caseAccessible(X,Y),
         not(bloqueBas(X1,Y)),
         atom_concat('carreBlanc',Y,Carre),
         atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow);
-    1=:=1.
+        colorerCase(Carrefin,yellow).
+    %1=:=1.
 
 
 colorerCase(Z,C):-
@@ -382,7 +407,7 @@ init :-
         %bleu(1,5, 10),
         %rouge(9,5, 10).
         bleu(3,5, 10),
-        rouge(2,5, 10).
+        rouge(3,4, 10).
 
 :- initfenetre.
 :- init.
