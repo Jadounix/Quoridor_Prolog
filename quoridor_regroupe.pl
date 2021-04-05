@@ -78,6 +78,14 @@ murhOccupe(X,Y) :-
     ),
     write('Il y a deja un mur a cet emplacement. Veuillez recommencer.').
 
+%vérifier qu'aucun mur n'est perpendiculaire 
+murPerpendiculaire(X,Y) :-
+    (murs(v,X,Y);
+     murs(h,X,Y)),
+    write('Vous ne pouvez pas croiser les murs').
+
+
+
 %verifier que aucun joueur n'est sur la case X,Y
 caseOccupee(X,Y) :-
     joueur(_,[X,Y],_).
@@ -161,10 +169,13 @@ rouge(X,Y, N) :-
         joueur(_,[A,O],_),
         afficherCases(A,O),!.
 
+
+
 %poser un mur horizontal
 mur(h,X,Y):-
     X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
     not(murhOccupe(X,Y)), %si pas deja un mur en X et/ou Y
+    not(murPerpendiculaire(X,Y)),%si pas un mur perpendiculaire
     grilleBlanche,
     joueur(J,[A,O],N),
     N > 0, %si le joueur a encore des murs a placer
@@ -182,6 +193,7 @@ mur(h,X,Y):-
 mur(v,X,Y):-
     X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
     not(murvOccupe(X,Y)), %si pas deja un mur en X et/ou Y
+    not(murPerpendiculaire(X,Y)),%si pas un mur perpendiculaire
     grilleBlanche,
     joueur(J,[A,O],N),
     N > 0, %si le joueur a encore des murs a placer
