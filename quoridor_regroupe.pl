@@ -2,37 +2,688 @@
 %Les murs ne doivent pas interdire l'accès aux lignes d'arrivées des pions adverses.
 %Problemes de bords, quand on veut jouer derriere un bord c'est l'autre pion qui est déplacé
 
-
 % Appel de la librairie
 :- dynamic(listeMurs/1).
 :- dynamic(murs/3).
 :- dynamic(casesJouables/1).
 :- use_module(library(pce)).
 
-%consignes
+%consinges
 consignes :-
-    write('Votre objectif est de toucher le mur oppose a celui de depart.\n'),
-    write('Le premier joueur est le joueur bleu.\n'),
-    write('Pour jouer, vous avez deux possibilites : deplacer votre pion ou poser un mur (jusqu a 10 chacun).\n'),
-    write('Vous pouvez deplacer votre pion uniquement sur les cases en jaune, en tapant les commandes suivantes : "bas(N°J)." ou "haut(N°J)." ou "gauche(N°J)." ou "droite(N°J)." en fonction de l endroit ou vous souhaitez mettre votre pion.\n'),
-    write('Pour les murs, par exemple pour poser un mur horizontal sous les cases 1 et 2 de la ligne 1, vous devez utiliser la commande "mur(h,1,1)." \n'),
-    write('Pour poser un mur vertical a droite des cases 2 et 3 de la colonne 5, vous devez utiliser la commande "mur(v,2,5)." \n'),
-    write('Vous ne  pouvez pas poser de mur sur un endroit deja utilise.\n'),
-    write('Vous pouvez revoir les consignes a tout moment en tapant : "consignes."\n\n\n\n').
+write('Votre objectif est de toucher le mur oppose a celui de depart.\n'),
+write('Vous trouverez les commandes a cote du plateau de jeu en fonction du joueur que vous etes.').
 
 
 %restart le programme
-restart :- 
-    retractall(joueur(_,_,_)),
-    retractall(murs(_,_,_)).
+restart :- retractall(joueur(_,_,_)),
+retractall(murs(_,_,_)).
 
 %Joueur(Id,[X,Y], nbMursRestants)
 :- dynamic (joueur/3).
-
 %Enumération de tous les routes possibles entre les differents points
 :- dynamic (route/3).
 
- 
+% libération des ressources
+liberer :-
+    free(@grilleBase),
+    libererGrille,
+    free(@mur1),free(@mur2),free(@mur3),free(@mur4),free(@mur5),free(@mur6),free(@mur7),free(@mur8),free(@mur9),free(@mur10),free(@mur11),free(@mur12),free(@mur13),free(@mur14),free(@mur15),free(@mur16),free(@mur17),free(@mur18),free(@mur19),free(@mur20),free(@pion1),free(@pion2).
+
+libererGrille:-
+    libererLigne(1),libererLigne(2),libererLigne(3),libererLigne(4),libererLigne(5),libererLigne(6),libererLigne(7),libererLigne(8),libererLigne(9).
+
+libererLigne(X):-
+    atom_concat('carreBlanc1',X,Carre),
+    libererCarre(Carre),
+    atom_concat('carreBlanc2',X,Carre2),
+    libererCarre(Carre2),
+    atom_concat('carreBlanc3',X,Carre3),
+    libererCarre(Carre3),
+    atom_concat('carreBlanc4',X,Carre4),
+    libererCarre(Carre4),
+    atom_concat('carreBlanc5',X,Carre5),
+    libererCarre(Carre5),
+    atom_concat('carreBlanc6',X,Carre6),
+    libererCarre(Carre6),
+    atom_concat('carreBlanc7',X,Carre7),
+    libererCarre(Carre7),
+    atom_concat('carreBlanc8',X,Carre8),
+    libererCarre(Carre8),
+    atom_concat('carreBlanc9',X,Carre9),
+    libererCarre(Carre9).
+
+libererCarre(X):-
+    free(@X).
+
+%vérifier qu'aucun bout de mur n'est sur la case X,Y
+murvOccupe(X,Y) :-
+    (
+     murs(v,X,Y);
+     X1 is X-1, murs(v,X1,Y);
+     X1 is X+1, murs(v,X1,Y)
+    ),
+    write('\n Il y a deja un mur a cet emplacement. Veuillez recommencer. \n').
+
+
+murhOccupe(X,Y) :-
+    (murs(h,X,Y);
+    Y1 is Y-1, murs(h,X,Y1);
+    Y1 is Y+1, murs(h,X,Y1)
+    ),
+    write('Il y a deja un mur a cet emplacement. Veuillez recommencer.').
+
+%vérifier qu'aucun mur n'est perpendiculaire
+murPerpendiculaire(X,Y) :-
+    (murs(v,X,Y);
+     murs(h,X,Y)),
+    write('Vous ne pouvez pas croiser les murs').
+
+%verifier que aucun joueur n'est sur la case X,Y
+caseOccupee(X,Y) :-
+    joueur(_,[X,Y],_).
+
+bloqueBas(X,Y) :-
+    murs(h,X,Y) ;
+    Z is Y-1, murs(h,X,Z),write("Un mur vous bloque.").
+
+bloqueHaut(X,Y) :-
+    Z is X-1, murs(h,Z,Y) ;
+    Z is X-1, W is Y-1, murs(h,Z,W),write("Un mur vous bloque.").
+
+bloqueGauche(X,Y) :-
+    W is Y-1, murs(v,X,W) ;
+    Z is X-1, W is Y-1, murs(v,Z,W),write("Un mur vous bloque.").
+
+bloqueDroite(X,Y) :-
+    murs(v,X,Y) ;
+    Z is X-1, murs(v,Z,Y),write("Un mur vous bloque.").
+
+caseAccessible(X,Y) :-
+    X =< 9,X > 0,Y =< 9,Y > 0,not(caseOccupee(X,Y)).
+
+%Si on met pas J en paramètre ca bug sur les bords
+
+%Faire se deplacer le joueur J en bas
+
+bas(J):-
+    joueur(J,[X,Y],N),
+    Z is X+1,
+    (   caseAccessible(Z,Y), not(bloqueBas(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+        Z2 is X+2, caseAccessible(Z2,Y), not(bloqueBas(X,Y)), not(bloqueBas(Z,Y)), Zdef is Z2),
+    retract(joueur(J,[X,Y],N)),
+    (J==1,bleu(Zdef,Y,N);J==2,rouge(Zdef,Y,N)).
+
+
+
+%Faire se deplacer le joueur J en haut
+haut(J):-
+    joueur(J,[X,Y],N),
+    Z is X-1,
+    (caseAccessible(Z,Y), not(bloqueHaut(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is X-2, caseAccessible(Z2,Y), not(bloqueHaut(X,Y)), not(bloqueHaut(Z,Y)), Zdef is Z2),
+    retract(joueur(J,[X,Y],N)),
+    (J==1,bleu(Zdef,Y,N);J==2,rouge(Zdef,Y,N)).
+
+
+%Faire se deplacer le joueur J a droite
+droite(J):-
+    joueur(J,[X,Y],N),
+    Z is Y+1,
+    (caseAccessible(X,Z), not(bloqueDroite(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is Y+2, caseAccessible(X,Z2), not(bloqueDroite(X,Y)), not(bloqueDroite(X,Z)), Zdef is Z2),
+%si case libre et pas de mur en Y+1 : Zdef prend Z2
+    retract(joueur(J,[X,Y],N)),
+    (J==1, bleu(X,Zdef,N);
+     J==2,rouge(X,Zdef,N)).
+
+%Faire se deplacer le joueur J a gauche
+gauche(J):-
+    joueur(J,[X,Y],N),
+    Z is Y-1,
+    (caseAccessible(X,Z), not(bloqueGauche(X,Y)), Zdef is Z;%si case libre et pas de mur : Zdef prend Z
+     Z2 is Y-2, caseAccessible(X,Z2), not(bloqueGauche(X,Y)), not(bloqueGauche(X,Z)),  Zdef is Z2),
+%si case libre et pas de mur en Y+1 : Zdef prend Z2
+    retract(joueur(J,[X,Y],N)),
+    (J==1, bleu(X,Zdef,N);
+     J==2,rouge(X,Zdef,N)).
+
+%Cas ou on affiche les coordonnees de l'autre pion
+%Faire se deplacer le joueur J en bas a droite
+basd(J):-
+    joueur(J,[X,Y],N),
+Y1 is Y+1,
+    Z is X+1,
+    caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+    (   caseAccessible(Z,Y1), not(bloqueBas(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+        Z2 is X+2, caseAccessible(Z2,Y1), not(bloqueBas(X,Y1)), not(bloqueBas(Z,Y1)), Zdef is Z2),
+    retract(joueur(J,[X,Y],N)),
+    (J==1,bleu(Zdef,Y1,N);J==2,rouge(Zdef,Y1,N)).
+
+%Faire se deplacer le joueur J en bas a gauche
+basg(J):-
+    joueur(J,[X,Y],N),
+Y1 is Y-1,
+    Z is X+1,
+caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+(   caseAccessible(Z,Y1), not(bloqueBas(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+    Z2 is X+2, caseAccessible(Z2,Y1), not(bloqueBas(X,Y1)), not(bloqueBas(Z,Y1)), Zdef is Z2),
+retract(joueur(J,[X,Y],N)),
+(J==1,bleu(Zdef,Y1,N);J==2,rouge(Zdef,Y1,N)).
+
+%Faire se deplacer le joueur J en haut à droite
+hautd(J):-
+    joueur(J,[X,Y],N),
+    Y1 is Y+1,
+    Z is X-1,
+caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+    (caseAccessible(Z,Y1), not(bloqueHaut(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is X-2, caseAccessible(Z2,Y1), not(bloqueHaut(X,Y1)), not(bloqueHaut(Z,Y1)), Zdef is Z2),
+    retract(joueur(J,[X,Y],N)),
+    (J==1,bleu(Zdef,Y1,N);J==2,rouge(Zdef,Y1,N)).
+
+%Faire se deplacer le joueur J en haut à gauche
+hautg(J):-
+    joueur(J,[X,Y],N),
+    Y1 is Y-1,
+    Z is X-1,
+caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+    (caseAccessible(Z,Y1), not(bloqueHaut(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is X-2, caseAccessible(Z2,Y1), not(bloqueHaut(X,Y1)), not(bloqueHaut(Z,Y1)), Zdef is Z2),
+    retract(joueur(J,[X,Y],N)),
+    (J==1,bleu(Zdef,Y1,N);J==2,rouge(Zdef,Y1,N)).
+
+
+
+%commandes plus rapideS
+b1:-
+    bas(1).
+b2:-
+    bas(2).
+bg1:-
+    basg(1).
+bg2:-
+    basg(2).
+bd1:-
+    basd(1).
+bd2:-
+    basd(2).
+g1:-
+    gauche(1).
+g2:-
+    gauche(2).
+d1:-
+    droite(1).
+d2:-
+    droite(2).
+h1:-
+    haut(1).
+h2:-
+    haut(2).
+hg1:-
+    hautg(1).
+hg2:-
+    hautg(2).
+hd1:-
+    hautd(1).
+hd2:-
+    hautd(2).
+
+
+%deplacements du pion 1
+bleu(X,Y,N) :-
+assert(joueur(1,[X,Y],N)),
+grilleBlanche,
+X1 is 50+40*(X-1),
+Y1 is 50+40*(Y-1),
+    free(@pion1),
+    send(@fenetre, display, new(@pion1, circle(30)), point(Y1,X1)),
+    send(@pion1,fill_pattern, colour(blue)),
+not(victoire(1, X)),
+joueur(_,[A,O],_),
+afficherCases(A,O).
+
+%deplacement du pion 2
+rouge(X,Y,N) :-
+assert(joueur(2,[X,Y],N)),
+grilleBlanche,
+X1 is 50+40*(X-1),
+Y1 is 50+40*(Y-1),
+    free(@pion2),
+    send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
+    send(@pion2,fill_pattern, colour(red)),
+not(victoire(2, X)),
+joueur(_,[A,O],_),
+afficherCases(A,O).
+
+%recherche si il y a un chemin d'arrivee en mode recursif
+chercheChemin(1,9,_) :-
+write("Chemin possible").
+chercheChemin(2,1,_) :-
+write("Chemin possible").
+
+chercheChemin(J,X,Y) :-
+Z is X+1,caseAccessible(Z,Y), not(bloqueBas(X,Y)),chercheChemin(J,Z,Y);
+Z is Y+1,caseAccessible(X,Z), not(bloqueDroite(X,Y)),chercheChemin(J,X,Z);
+Z is X-1,caseAccessible(Z,Y), not(bloqueHaut(X,Y)),chercheChemin(J,Z,Y);
+Z is Y-1,caseAccessible(X,Z), not(bloqueGauche(X,Y)), chercheChemin(J,X,Z);
+
+Z is X+1,Z2 is X+2, caseAccessible(Z2,Y), not(bloqueBas(X,Y)), not(bloqueBas(Z,Y)),chercheChemin(J,Z2,Y);
+Z is Y+1, Z2 is Y+2, caseAccessible(X,Z2), not(bloqueDroite(X,Y)), not(bloqueDroite(X,Z)), chercheChemin(J,X,Z2);
+Z is X-1, Z2 is X-2, caseAccessible(Z2,Y), not(bloqueHaut(X,Y)), not(bloqueHaut(Z,Y)),chercheChemin(J,Z2,Y);
+Z is Y-1,Z2 is Y-2, caseAccessible(X,Z2), not(bloqueGauche(X,Y)), not(bloqueGauche(X,Z)), chercheChemin(J,X,Z2);
+
+Y1 is Y+1, Z is X+1, caseOccupee(Z,Y),bloqueBas(Z,Y),!,caseAccessible(Z,Y1), not(bloqueBas(X,Y1)), chercheChemin(J,Z,Y1);
+Y1 is Y+1, Z is X+1, caseOccupee(Z,Y),bloqueBas(Z,Y),!, Z2 is X+2, caseAccessible(Z2,Y1), not(bloqueBas(X,Y1)), not(bloqueBas(Z,Y1)),chercheChemin(J,Z2,Y1);
+Y1 is Y-1,Z is X+1,caseOccupee(Z,Y),bloqueBas(Z,Y),!,caseAccessible(Z,Y1), not(bloqueBas(X,Y1)), chercheChemin(J,Z,Y1);
+Y1 is Y-1,Z is X+1,caseOccupee(Z,Y),bloqueBas(Z,Y),!,Z2 is X+2, caseAccessible(Z2,Y1), not(bloqueBas(X,Y1)), not(bloqueBas(Z,Y1)), chercheChemin(J,Z2,Y1);
+Y1 is Y+1, Z is X-1,caseOccupee(Z,Y),bloqueBas(Z,Y),!,caseAccessible(Z,Y1), not(bloqueHaut(X,Y1)), chercheChemin(J,Z,Y1);
+Y1 is Y+1, Z is X-1,caseOccupee(Z,Y),bloqueBas(Z,Y),!,Z2 is X-2, caseAccessible(Z2,Y1), not(bloqueHaut(X,Y1)), not(bloqueHaut(Z,Y1)),chercheChemin(J,Z2,Y1);
+Y1 is Y-1,Z is X-1,caseOccupee(Z,Y),bloqueBas(Z,Y),!, caseAccessible(Z,Y1), not(bloqueHaut(X,Y1)), chercheChemin(J,Z,Y1);
+Y1 is Y-1,Z is X-1,caseOccupee(Z,Y),bloqueBas(Z,Y),!,  Z2 is X-2, caseAccessible(Z2,Y1), not(bloqueHaut(X,Y1)), not(bloqueHaut(Z,Y1)),chercheChemin(J,Z2,Y1).
+
+
+
+mur(J,h,X,Y):-
+X > 0, Y > 0,
+X < 9, Y < 9,
+joueur(J,[A,O],N),
+(N ==0,write("Vous n'avez plus de mur. Veuillez recommencer.");1==1),
+N >0,!,
+cheminExisteraEncore(h,X,Y,J),
+%chercheChemin(J,A,O),
+not(murhOccupe(X,Y)),
+not(murPerpendiculaire(X,Y)),
+grilleBlanche,
+retract(joueur(J,[A,O],N)),
+N1 is N-1,
+retract(listeMurs([Mur|Q])),
+murhorizontal(X,Y,Mur),
+asserta(listeMurs(Q)),
+assert(joueur(J,[A,O],N1)),
+assert(murs(h,X,Y)),
+(J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
+afficherCases(Ab,Or).
+
+
+
+mur(J,v,X,Y):-
+X > 0, Y > 0,
+X < 9, Y < 9,
+joueur(J,[A,O],N),
+(N ==0,write("Vous n'avez plus de mur. Veuillez recommencer.");1==1),
+N >0,!,
+cheminExisteraEncore(v,X,Y,J),
+%chercheChemin(J,A,O),
+not(murvOccupe(X,Y)),
+not(murPerpendiculaire(X,Y)),
+grilleBlanche,
+retract(joueur(J,[A,O],N)),
+N1 is N-1,
+retract(listeMurs([Mur|Q])),
+murvertical(X,Y,Mur),
+asserta(listeMurs(Q)),
+assert(joueur(J,[A,O],N1)),
+assert(murs(v,X,Y)),
+(J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
+afficherCases(Ab,Or).
+
+%commandes plus rapideS
+mh1(X,Y):-
+    mur(1,h,X,Y).
+mv1(X,Y):-
+    mur(1,v,X,Y).
+mh2(X,Y):-
+    mur(2,h,X,Y).
+mv2(X,Y):-
+    mur(2,v,X,Y).
+
+
+
+murhorizontal(X,Y,Mur):-
+X1 is 80+40*(X-1),
+Y1 is 50+40*(Y-1),
+send(@fenetre, display,new(Mur, box(70,10)), point(Y1,X1)),
+send(Mur, fill_pattern, colour(green)).
+
+murvertical(X,Y,Mur):-
+X1 is 50+40*(X-1),
+Y1 is 80+40*(Y-1),
+send(@fenetre, display, new(Mur, box(10,70)), point(Y1,X1)),
+send(Mur, fill_pattern, colour(green)).
+
+
+%Verifier si un chemin existe entre deux points
+chemin(Depart, Arrivee, Chemin):-
+    chemin(Depart, Arrivee, [Depart], Chemin). % ne sert qu'à ajouter le troisième argument
+% c'est le chemin déjà parcouru, donc la ville de départ au début
+
+% si je suis à la ville d'arrivée, c'est que le travail est fini :
+% le chemin déjà parcouru est alors le chemin recherché
+chemin(Arrivee, Arrivee, Chemin, Chemin):-!.
+
+chemin(Depart, Arrivee,CheminParcouru, CheminComplet):-
+    findall(Ville, route(Depart, Ville, true), ListeVillesAccessibles),  % construit la liste des voisines immédiates
+    member(ProchaineEtape, ListeVillesAccessibles), % choisit une étape dans cette liste
+    not(member(ProchaineEtape, CheminParcouru)), % je ne reviens pas sur mes pas
+    append( CheminParcouru,[ProchaineEtape], NouveauChemin), % j'ajoute l'étape au parcours
+    chemin(ProchaineEtape, Arrivee, NouveauChemin, CheminComplet). % récursivement jusqu'à l'arrivée
+
+%mise à jour des routes
+majRoute(D, X, Y):-
+    (D == v, X1 is X+1, Y1 is Y+1,
+    retract(route((X,Y),(X,Y1),true)), retract(route((X1,Y),(X1,Y1),true)),
+    assert(route((X,Y),(X,Y1),false)), assert(route((X1,Y),(X1,Y1),false)));
+    (D == h, X1 is X+1, Y1 is Y+1,
+    retract(route((X,Y),(X1,Y),true)), retract(route((X,Y1),(X1,Y1),true)),
+    assert(route((X,Y),(X1,Y),false)), assert(route((X,Y1),(X1,Y1),false))).
+
+%vérifier existence d'un chemin avant la pose du mur
+cheminExisteraEncore(D, X, Y, J):-
+    joueur(J,[Xj,Yj],_),
+    (J == 2, O is 9 ; J == 1, O is 1), %on inverse pour avoir l'adversaire
+    majRoute(D, X, Y),
+    ((Xj < O,
+    chemin((Xj,Yj),(O,_),Chemin);
+    Xj > O,
+    chemin((O,_),(Xj,Yj),Chemin));
+    %on a verifie qu une route existait bien
+    %si la route existe tout va bien et on ne rentre pas ici
+    %soit la route existe pas, et donc on doit faire une maj
+    ((Xj < O,
+    not(chemin((Xj,Yj),(O,_),Chemin));
+    Xj > O,
+    not(chemin((O,_),(Xj,Yj),Chemin))),
+    (D == v, X1 is X+1, Y1 is Y+1,
+    retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
+    assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
+    (D == h, X1 is X+1, Y1 is Y+1,
+    retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
+    assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
+    write("Poser ce mur empêchera l adversaire d accéder à la ligne d arrivee."),
+    1 =:= 0 %permet de retourner false
+    )
+    ).
+
+    /*not(chemin((Xj,Yj),(O,_),Chemin)),
+    (D == v, X1 is X+1, Y1 is Y+1,
+    retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
+    assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
+    (D == h, X1 is X+1, Y1 is Y+1,
+    retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
+    assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
+    write("Poser ce mur empêchera l'adversaire d'accéder à la ligne d'arrivée."),
+    1 =:= 0 %permet de retourner false*/
+
+
+
+%affichage des cases voisines jouables du point X,Y
+%X1 is X-1, X2 is X+1, Y1 is Y-1, Y2 is Y+1,
+afficherCases(X,Y):-
+joueur(J,[X,Y],_),
+caseProche(X,Y,g),caseProche(X,Y,d),caseProche(X,Y,h),caseProche(X,Y,b),
+caseProche(X,Y,bg),caseProche(X,Y,bd),caseProche(X,Y,hg),caseProche(X,Y,hd),
+(J==1,write('C est au tour du joueur 1 (bleu) de jouer.'); J==2, write('C est au tour du joueur 2 (rouge) de jouer.')),etatPartie.
+
+
+
+caseProche(X,Y,b):-
+    Z is X+1,
+     (caseAccessible(Z,Y), not(bloqueBas(X,Y)), Zdef is Z;
+      not(caseAccessible(Z,Y)),Z2 is X+2, caseAccessible(Z2,Y), not(bloqueBas(X,Y)), not(bloqueBas(Z,Y)), Zdef is Z2,!),
+    atom_concat('carreBlanc',Y,Carre),atom_concat(Carre,Zdef,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+caseProche(X,Y,h):-
+    Z is X-1,
+    (caseAccessible(Z,Y), not(bloqueHaut(X,Y)), Zdef is Z;
+     not(caseAccessible(Z,Y)),Z2 is X-2, caseAccessible(Z2,Y), not(bloqueHaut(X,Y)), not(bloqueHaut(Z,Y)), Zdef is Z2,!),
+    atom_concat('carreBlanc',Y,Carre),atom_concat(Carre,Zdef,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+
+%Faire se deplacer le joueur J a droite
+caseProche(X,Y,d):-
+    Z is Y+1,
+    (caseAccessible(X,Z), not(bloqueDroite(X,Y)), Zdef is Z;
+     not(caseAccessible(X,Z)),Z2 is Y+2, caseAccessible(X,Z2), not(bloqueDroite(X,Y)), not(bloqueDroite(X,Z)), Zdef is Z2),
+atom_concat('carreBlanc',Zdef,Carre),atom_concat(Carre,X,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+%Faire se deplacer le joueur J a gauche
+caseProche(X,Y,g):-
+    Z is Y-1,
+    (caseAccessible(X,Z), not(bloqueGauche(X,Y)), Zdef is Z;
+     not(caseAccessible(X,Z)),Z2 is Y-2, caseAccessible(X,Z2), not(bloqueGauche(X,Y)), not(bloqueGauche(X,Z)),  Zdef is Z2),
+atom_concat('carreBlanc',Zdef,Carre),atom_concat(Carre,X,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+
+
+%Cas ou on affiche les coordonnees de l'autre pion
+%Faire se deplacer le joueur J en bas a droite
+caseProche(X,Y,bd):-
+Y1 is Y+1,
+    Z is X+1,
+    caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+    (   caseAccessible(Z,Y1), not(bloqueBas(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+        Z2 is X+2, caseAccessible(Z2,Y1), not(bloqueBas(X,Y1)), not(bloqueBas(Z,Y1)), Zdef is Z2),
+atom_concat('carreBlanc',Y1,Carre),atom_concat(Carre,Zdef,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+%Faire se deplacer le joueur J en bas a gauche
+caseProche(X,Y,bg):-
+Y1 is Y-1,
+    Z is X+1,
+caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+(   caseAccessible(Z,Y1), not(bloqueBas(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+    Z2 is X+2, caseAccessible(Z2,Y1), not(bloqueBas(X,Y1)), not(bloqueBas(Z,Y1)), Zdef is Z2),
+atom_concat('carreBlanc',Y1,Carre),atom_concat(Carre,Zdef,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+%Faire se deplacer le joueur J en haut à droite
+caseProche(X,Y,hd):-
+    Y1 is Y+1,
+    Z is X-1,
+caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+    (caseAccessible(Z,Y1), not(bloqueHaut(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is X-2, caseAccessible(Z2,Y1), not(bloqueHaut(X,Y1)), not(bloqueHaut(Z,Y1)), Zdef is Z2),
+atom_concat('carreBlanc',Y1,Carre),atom_concat(Carre,Zdef,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+%Faire se deplacer le joueur J en haut à gauche
+caseProche(X,Y,hg):-
+    Y1 is Y-1,
+    Z is X-1,
+caseOccupee(Z,Y),bloqueBas(Z,Y),!,
+    (caseAccessible(Z,Y1), not(bloqueHaut(X,Y1)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
+     Z2 is X-2, caseAccessible(Z2,Y1), not(bloqueHaut(X,Y1)), not(bloqueHaut(Z,Y1)), Zdef is Z2),
+atom_concat('carreBlanc',Y1,Carre),atom_concat(Carre,Zdef,Carrefin),colorerCase(Carrefin,yellow);1==1.
+
+
+
+
+colorerCase(Z,C):-
+send(@Z, fill_pattern, colour(C)).
+
+
+finJeu :-
+    write('FIN DE PARTIE \nVoulez-vous recommencer ? -oui - non').
+
+%l'utilisateur choisit de recommencer
+oui :-
+    init.
+
+non :-
+    write('Merci d avoir joue ! Fin du jeu').
+
+% valable pour 2 joueurs
+victoire(1,X) :-
+    X =:= 9,
+    write('Joueur 1 a gagne ! '),
+    finJeu.
+
+victoire(2,X) :-
+    X =:= 1,
+    write('Joueur 2 a gagne ! '),
+    finJeu.
+
+ligneBlanche(X):-
+    atom_concat('carreBlanc1',X,Carre),
+colorerCase(Carre,white),
+    atom_concat('carreBlanc2',X,Carre2),
+colorerCase(Carre2,white),
+    atom_concat('carreBlanc3',X,Carre3),
+colorerCase(Carre3,white),
+    atom_concat('carreBlanc4',X,Carre4),
+colorerCase(Carre4,white),
+    atom_concat('carreBlanc5',X,Carre5),
+colorerCase(Carre5,white),
+    atom_concat('carreBlanc6',X,Carre6),
+colorerCase(Carre6,white),
+    atom_concat('carreBlanc7',X,Carre7),
+colorerCase(Carre7,white),
+    atom_concat('carreBlanc8',X,Carre8),
+colorerCase(Carre8,white),
+    atom_concat('carreBlanc9',X,Carre9),
+colorerCase(Carre9,white).
+
+%grille blanche
+grilleBlanche:-
+ligneBlanche(1),
+ligneBlanche(2),
+ligneBlanche(3),
+ligneBlanche(4),
+ligneBlanche(5),
+ligneBlanche(6),
+ligneBlanche(7),
+ligneBlanche(8),
+ligneBlanche(9).
+
+
+
+carre(X,Y,Z) :-
+    send(@fenetre, display, new(@Z, box(30,30)), point(X,Y)),
+    send(@Z, fill_pattern, colour(white)).
+
+affichageLigne(X) :-
+    Y is 50+(X-1)*40,
+    atom_concat('carreBlanc1',X,FinalString),
+    carre(50,Y,FinalString),
+    atom_concat('carreBlanc2',X,FinalString2),
+    carre(90,Y,FinalString2),
+    atom_concat('carreBlanc3',X,FinalString3),
+    carre(130,Y,FinalString3),
+    atom_concat('carreBlanc4',X,FinalString4),
+    carre(170,Y,FinalString4),
+    atom_concat('carreBlanc5',X,FinalString5),
+    carre(210,Y,FinalString5),
+    atom_concat('carreBlanc6',X,FinalString6),
+    carre(250,Y,FinalString6),
+    atom_concat('carreBlanc7',X,FinalString7),
+    carre(290,Y,FinalString7),
+    atom_concat('carreBlanc8',X,FinalString8),
+    carre(330,Y,FinalString8),
+    atom_concat('carreBlanc9',X,FinalString9),
+    carre(370,Y,FinalString9).
+
+text_box(Text,X,Y) :-
+send(@fenetre, display,new(text(Text, center, normal)),point(X,Y)).
+
+text_infos(Text,X,Y,Z) :-
+free(Z),
+send(@fenetre, display,new(Z,text(Text, center, normal)),point(X,Y)).
+
+afficherCoord:-
+%coordonnees des colonnes
+text_box('1',65,35),
+text_box('2',105,35),
+text_box('3',145,35),
+text_box('4',185,35),
+text_box('5',225,35),
+text_box('6',265,35),
+text_box('7',305,35),
+text_box('8',345,35),
+text_box('9',385,35),
+%coordonnees des lignes
+text_box('1',35,60),
+text_box('2',35,100),
+text_box('3',35,140),
+text_box('4',35,180),
+text_box('5',35,220),
+text_box('6',35,260),
+text_box('7',35,300),
+text_box('8',35,340),
+text_box('9',35,380).
+
+etatPartie :-
+joueur(J,[_,_],N),
+(J==1, text_infos("C'est au joueur 1 (bleu) de jouer !",450,75,@joueur);J==2, text_infos("C'est au joueur 2 (rouge) de jouer !",450,75,@joueur)),
+atom_concat("Nombre de murs qu'il lui reste : ",N,FinalString),
+text_infos(FinalString,450,90,@murs),
+text_consignes(J).
+
+text_consignes(1) :-
+text_infos("Informations sur la partie en cours : ",450,50,@j11),
+text_infos("Differentes commandes joueur 1 ",450,150,@j12),
+text_infos("Deplacements : ",450,175,@j13),
+text_infos("Haut : h1. ",450,200,@j14),
+text_infos("Haut a droite : hd1. ",450,215,@j15),
+text_infos("Haut a gauche : hg1. ",450,230,@j16),
+text_infos("Bas : b1. ",450,245,@j17),
+text_infos("Bas a droite: bd1. ",450,260,@j18),
+text_infos("Bas a gauche: bg1. ",450,275,@j19),
+text_infos("Droite : d1. ",450,290,@j110),
+text_infos("Gauche : g1. ",450,305,@j111),
+text_infos("Murs : ",450,330,@j112),
+text_infos("Horizontal sous ligne X, a droite de colonne Y : mh1(X,Y). ",450,355,@j113),
+text_infos("Vertical sous ligne X, a droite de colonne Y : mv1(X,Y). ",450,370,@j114).
+
+text_consignes(2) :-
+text_infos("Informations sur la partie en cours : ",450,50,@j11),
+text_infos("Differentes commandes joueur 2 ",450,150,@j12),
+text_infos("Deplacements : ",450,175,@j13),
+text_infos("Haut : h2. ",450,200,@j14),
+text_infos("Haut a droite : hd2. ",450,215,@j15),
+text_infos("Haut a gauche : hg2. ",450,230,@j16),
+text_infos("Bas : b2. ",450,245,@j17),
+text_infos("Bas a droite: bd2. ",450,260,@j18),
+text_infos("Bas a gauche: bg2. ",450,275,@j19),
+text_infos("Droite : d2. ",450,290,@j110),
+text_infos("Gauche : g2. ",450,305,@j111),
+text_infos("Murs : ",450,330,@j112),
+text_infos("Horizontal sous ligne X, a droite de colonne Y : mh2(X,Y). ",450,355,@j113),
+text_infos("Vertical sous ligne X, a droite de colonne Y : mv2(X,Y). ",450,370,@j114).
+
+initfenetre :-
+new(@fenetre, picture('Quoridor')),
+send(@fenetre, open).
+
+
+
+init :-
+restart,
+liberer,
+    % Création de la grille grise
+    send(@fenetre, display, new(@grilleBase, box(850,450))),
+    send(@grilleBase, fill_pattern, colour(grey)),
+
+    % création de la première ligne de carrés
+    affichageLigne(1),
+    affichageLigne(2),
+    affichageLigne(3),
+    affichageLigne(4),
+    affichageLigne(5),
+    affichageLigne(6),
+    affichageLigne(7),
+    affichageLigne(8),
+    affichageLigne(9),
+    %Création des murs
+assert(listeMurs([@mur1,@mur2,@mur3,@mur4,@mur5,@mur6,@mur7,@mur8,@mur9,@mur10,@mur11,@mur12,@mur13,@mur14,@mur15,@mur16,@mur17,@mur18,@mur19,@mur20])),
+ assert(murs()),
+consignes,
+%création grille
+afficherCoord,
+    % Création des pions
+    bleu(1,5,10),
+    rouge(9,5,10).
+
+:- initfenetre.
+:- init.
+
+
 %déplacement horizontal (gauche droite)
  
 %1ère ligne
@@ -400,434 +1051,3 @@ route((5,9),(4,9), true).
 route((4,9),(3,9), true).
 route((3,9),(2,9), true).
 route((2,9),(1,9), true).
-
-% libération des ressources
-liberer :-
-    free(@grilleBase),
-    libererGrille,
-    free(@mur1),free(@mur2),free(@mur3),free(@mur4),free(@mur5),free(@mur6),free(@mur7),free(@mur8),free(@mur9),free(@mur10),free(@mur11),free(@mur12),free(@mur13),free(@mur14),free(@mur15),free(@mur16),free(@mur17),free(@mur18),free(@mur19),free(@mur20),free(@pion1),free(@pion2).
-
-libererGrille:-
-    libererLigne(1),libererLigne(2),libererLigne(3),libererLigne(4),libererLigne(5),libererLigne(6),libererLigne(7),libererLigne(8),libererLigne(9).
-
-libererLigne(X):-
-    atom_concat('carreBlanc1',X,Carre),
-    libererCarre(Carre),
-    atom_concat('carreBlanc2',X,Carre2),
-    libererCarre(Carre2),
-    atom_concat('carreBlanc3',X,Carre3),
-    libererCarre(Carre3),
-    atom_concat('carreBlanc4',X,Carre4),
-    libererCarre(Carre4),
-    atom_concat('carreBlanc5',X,Carre5),
-    libererCarre(Carre5),
-    atom_concat('carreBlanc6',X,Carre6),
-    libererCarre(Carre6),
-    atom_concat('carreBlanc7',X,Carre7),
-    libererCarre(Carre7),
-    atom_concat('carreBlanc8',X,Carre8),
-    libererCarre(Carre8),
-    atom_concat('carreBlanc9',X,Carre9),
-    libererCarre(Carre9).
-
-libererCarre(X):-
-    free(@X).
-
-%vérifier qu'aucun bout de mur n'est sur la case X,Y
-murvOccupe(X,Y) :-
-    (
-     murs(v,X,Y);
-     X1 is X-1, murs(v,X1,Y);
-     X1 is X+1, murs(v,X1,Y)
-    ),
-    write('\n Il y a deja un mur a cet emplacement. Veuillez recommencer. \n').
-
-
-murhOccupe(X,Y) :-
-    (murs(h,X,Y);
-    Y1 is Y-1, murs(h,X,Y1);
-    Y1 is Y+1, murs(h,X,Y1)
-    ),
-    write('Il y a deja un mur a cet emplacement. Veuillez recommencer.').
-
-%vérifier qu'aucun mur n'est perpendiculaire 
-murPerpendiculaire(X,Y) :-
-    (murs(v,X,Y);
-     murs(h,X,Y)),
-    write('Vous ne pouvez pas croiser les murs').
-
-%Verifier si un chemin existe entre deux points
-chemin(Depart, Arrivee, Chemin):-
-    chemin(Depart, Arrivee, [Depart], Chemin). % ne sert qu'à ajouter le troisième argument
-% c'est le chemin déjà parcouru, donc la ville de départ au début
-
-% si je suis à la ville d'arrivée, c'est que le travail est fini :
-% le chemin déjà parcouru est alors le chemin recherché
-chemin(Arrivee, Arrivee, Chemin, Chemin):-!.
-
-chemin(Depart, Arrivee,CheminParcouru, CheminComplet):-
-    findall(Ville, route(Depart, Ville, true), ListeVillesAccessibles),  % construit la liste des voisines immédiates
-    member(ProchaineEtape, ListeVillesAccessibles), % choisit une étape dans cette liste
-    not(member(ProchaineEtape, CheminParcouru)), % je ne reviens pas sur mes pas
-    append( CheminParcouru,[ProchaineEtape], NouveauChemin), % j'ajoute l'étape au parcours
-    chemin(ProchaineEtape, Arrivee, NouveauChemin, CheminComplet). % récursivement jusqu'à l'arrivée
-
-
-%verifier que aucun joueur n'est sur la case X,Y
-caseOccupee(X,Y) :-
-    joueur(_,[X,Y],_).
-
-bloqueBas(X,Y) :-
-    murs(h,X,Y) ;
-    Z is Y-1, murs(h,X,Z).
-
-bloqueHaut(X,Y) :-
-    Z is X-1, murs(h,Z,Y) ;
-    Z is X-1, W is Y-1, murs(h,Z,W).
-
-bloqueGauche(X,Y) :-
-    W is Y-1, murs(v,X,W) ;
-    Z is X-1, W is Y-1, murs(v,Z,W).
-
-bloqueDroite(X,Y) :-
-    murs(v,X,Y) ;
-    Z is X-1, murs(v,Z,Y).
-
-caseAccessible(X,Y) :-
-    X =< 9,X > 0,Y =< 9,Y > 0,not(caseOccupee(X,Y)).
-
-
-
-%Faire se deplacer le joueur J en bas
-bas(J):-
-    joueur(J,[X,Y],N),
-    Z is X+1,
-    (   caseAccessible(Z,Y), not(bloqueBas(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
-        Z2 is X+2, caseAccessible(Z2,Y), not(bloqueBas(X,Y)), not(bloqueBas(Z,Y)), Zdef is Z2), 
-    retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
-
-%Faire se deplacer le joueur J en haut
-haut(J) :-
-    joueur(J,[X,Y],N),
-    Z is X-1,
-    (caseAccessible(Z,Y), not(bloqueHaut(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
-     Z2 is X-2, caseAccessible(Z2,Y), not(bloqueHaut(X,Y)), not(bloqueHaut(Z,Y)), Zdef is Z2), %si case libre et pas de mur en X+1 : Zdef prend Z2
-    retract(joueur(J,[X,Y],N)),
-    (J==1,bleu(Zdef,Y, N);J==2,rouge(Zdef,Y, N)).
-
-
-%Faire se deplacer le joueur J a droite
-droite(J):-
-    joueur(J,[X,Y],N),
-    Z is Y+1,
-    (caseAccessible(X,Z), not(bloqueDroite(X,Y)), Zdef is Z; %si case libre et pas de mur : Zdef prend Z
-     Z2 is Y+2, caseAccessible(X,Z2), not(bloqueDroite(X,Y)), not(bloqueDroite(X,Z)), Zdef is Z2), %si case libre et pas de mur en Y+1 : Zdef prend Z2
-    retract(joueur(J,[X,Y],N)),
-    (J==1, bleu(X,Zdef, N);
-     J==2,rouge(X,Zdef, N)).
-
-%Faire se deplacer le joueur J a gauche
-gauche(J):-
-    joueur(J,[X,Y],N),
-    Z is Y-1,
-    (caseAccessible(X,Z), not(bloqueGauche(X,Y)), Zdef is Z;%si case libre et pas de mur : Zdef prend Z
-     Z2 is Y-2, caseAccessible(X,Z2), not(bloqueGauche(X,Y)), not(bloqueGauche(X,Z)),  Zdef is Z2), %si case libre et pas de mur en Y+1 : Zdef prend Z2
-    retract(joueur(J,[X,Y],N)),
-    (J==1, bleu(X,Zdef, N);
-     J==2,rouge(X,Zdef, N)).
-
-
-%deplacements du pion 1 sur l'interface
-bleu(X,Y,N) :-
-    assert(joueur(1,[X,Y],N)),
-    grilleBlanche,
-    X1 is 50+40*(X-1),
-    Y1 is 50+40*(Y-1),
-        free(@pion1),
-        send(@fenetre, display, new(@pion1, circle(30)), point(Y1,X1)),
-        send(@pion1,fill_pattern, colour(blue)),
-    not(victoire(1, X)),
-        joueur(_,[A,O],_),
-        afficherCases(A,O),!.
-
-%deplacement du pion 2 sur l'interface
-rouge(X,Y, N) :-
-    assert(joueur(2,[X,Y],N)), 
-    grilleBlanche,
-    X1 is 50+40*(X-1),
-    Y1 is 50+40*(Y-1),
-        free(@pion2),
-        send(@fenetre, display, new(@pion2, circle(30)), point(Y1,X1)),
-        send(@pion2,fill_pattern, colour(red)),
-    not(victoire(2, X)),
-        joueur(_,[A,O],_),
-        afficherCases(A,O),!.
-
-%mise à jour des routes
-majRoute(D, X, Y):-
-	(D == v, X1 is X+1, Y1 is Y+1, 
-	retract(route((X,Y),(X,Y1),true)), retract(route((X1,Y),(X1,Y1),true)),
-	assert(route((X,Y),(X,Y1),false)), assert(route((X1,Y),(X1,Y1),false)));
-	(D == h, X1 is X+1, Y1 is Y+1, 
-	retract(route((X,Y),(X1,Y),true)), retract(route((X,Y1),(X1,Y1),true)),
-	assert(route((X,Y),(X1,Y),false)), assert(route((X,Y1),(X1,Y1),false))).
-
-%vérifier existence d'un chemin avant la pose du mur
-cheminExisteraEncore(D, X, Y, J):-
-	joueur(J,[Xj,Yj],_),
-	(J == 2, O is 9 ; J == 1, O is 1), %on inverse pour avoir l'adversaire
-	majRoute(D, X, Y),
-	((Xj < O,
-	chemin((Xj,Yj),(O,_),Chemin);
-	Xj > O,
-	chemin((O,_),(Xj,Yj),Chemin));
-	%on a verifie qu une route existait bien
-	%si la route existe tout va bien et on ne rentre pas ici
-	%soit la route existe pas, et donc on doit faire une maj
-	((Xj < O,
-	not(chemin((Xj,Yj),(O,_),Chemin));
-	Xj > O,
-	not(chemin((O,_),(Xj,Yj),Chemin))),
-	(D == v, X1 is X+1, Y1 is Y+1, 
-	retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
-	assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
-	(D == h, X1 is X+1, Y1 is Y+1, 
-	retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
-	assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
-	write("Poser ce mur empêchera l adversaire d accéder à la ligne d arrivee."),
-	1 =:= 0 %permet de retourner false
-	)
-	).
-
-	/*not(chemin((Xj,Yj),(O,_),Chemin)),
-	(D == v, X1 is X+1, Y1 is Y+1, 
-	retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
-	assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
-	(D == h, X1 is X+1, Y1 is Y+1, 
-	retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
-	assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
-	write("Poser ce mur empêchera l'adversaire d'accéder à la ligne d'arrivée."),
-	1 =:= 0 %permet de retourner false*/
-
-
-%poser un mur horizontal
-mur(h,X,Y):-
-    X > 0, Y > 0, %positionne le mur dans le plateau
-    X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
-    not(murhOccupe(X,Y)), %si pas deja un mur en X etou Y
-    not(murPerpendiculaire(X,Y)),%si pas un mur perpendiculaire
-    grilleBlanche,
-    joueur(J,[A,O],N),
-	cheminExisteraEncore(h,X,Y,J),
-    N > 0, %si le joueur a encore des murs a placer
-    retract(joueur(J,[A,O],N)),
-    N1 is N-1,
-    retract(listeMurs([Mur|Q])),
-    murhorizontal(X,Y,Mur),
-    asserta(listeMurs(Q)),
-    assert(joueur(J,[A,O],N1)), %on update le nb de murs restants du joueur
-    assert(murs(h,X,Y)), %update la liste des murs
-    (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
-    afficherCases(Ab,Or),!.
-
-%poser un mur vertical
-mur(v,X,Y):-
-    X > 0, Y > 0, %positionne le mur dans le plateau
-    X < 9, Y < 9, %ne peut pas positionner un mur depuis la 9ème case d'une ligne / colonne sinon déborde
-    not(murvOccupe(X,Y)), %si pas deja un mur en X et ou Y
-    not(murPerpendiculaire(X,Y)),%si pas un mur perpendiculaire
-    grilleBlanche,
-    joueur(J,[A,O],N),
-	cheminExisteraEncore(v,X,Y,J),
-    N > 0, %si le joueur a encore des murs a placer
-    retract(joueur(J,[A,O],N)),
-    N1 is N-1,
-    retract(listeMurs([Mur|Q])),
-    murvertical(X,Y,Mur),
-    asserta(listeMurs(Q)),
-    assert(joueur(J,[A,O],N1)), %on update le nb de murs restants du joueur
-    assert(murs(v,X,Y)), %update la liste des murs
-    (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
-    afficherCases(Ab,Or),!.
-
-
-%affichage mur horizontal
-murhorizontal(X,Y,Mur):-
-    X1 is 80+40*(X-1),
-    Y1 is 50+40*(Y-1),
-    send(@fenetre, display,new(Mur, box(70,10)), point(Y1,X1)),
-    send(Mur, fill_pattern, colour(green)).
-
-%affichage mur vertical
-murvertical(X,Y,Mur):-
-    X1 is 50+40*(X-1),
-    Y1 is 80+40*(Y-1),
-    send(@fenetre, display, new(Mur, box(10,70)), point(Y1,X1)),
-    send(Mur, fill_pattern, colour(green)).
-
-
-%affichage des cases voisines jouables du point X,Y
-afficherCases(X,Y):-
-    X1 is X-1, 
-    X2 is X+1, 
-    Y1 is Y-1, 
-    Y2 is Y+1,
-    ((caseJouable(X,Y1,g); Y4 is Y-2, caseJouable(X,Y4,g)), %pourquoi marche pas ?
-    (caseJouable(X,Y2,d); Y3 is Y+2, caseJouable(X,Y3,d)),
-    (caseJouable(X1,Y,h); X3 is X-2, caseJouable(X3,Y,h)), %si la case du haut est pas jouable, est-ce que celle encore au dessus l'est ?
-    (caseJouable(X2,Y,b); X4 is X+2, caseJouable(X4,Y,b))),
-    joueur(J,[_,_],_),
-    (J==1, write('C est au tour du joueur 1 de jouer.'); 
-     J==2, write('C est au tour du joueur 2 de jouer.')).
-
-caseJouable(X,Y,g):-
-    Y1 is Y+1,
-        caseAccessible(X,Y), 
-        not(bloqueGauche(X,Y1)),
-        atom_concat('carreBlanc',Y,Carre),
-        atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow).
-    %1=:=1.
-caseJouable(X,Y,d):-
-    Y1 is Y-1,
-        caseAccessible(X,Y),
-        not(bloqueDroite(X,Y1)),
-        atom_concat('carreBlanc',Y,Carre),
-        atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow).
-    %1=:=1.
-caseJouable(X,Y,h):-
-    X1 is X+1,
-        caseAccessible(X,Y),
-        not(bloqueHaut(X1,Y)),
-        atom_concat('carreBlanc',Y,Carre),
-        atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow).
-    %1=:=1.
-caseJouable(X,Y,b):-
-    X1 is X-1,
-        caseAccessible(X,Y),
-        not(bloqueBas(X1,Y)),
-        atom_concat('carreBlanc',Y,Carre),
-        atom_concat(Carre,X,Carrefin),
-        colorerCase(Carrefin,yellow).
-    %1=:=1.
-
-
-colorerCase(Z,C):-
-    send(@Z, fill_pattern, colour(C)).
-
-finJeu :-
-    write('FIN DE PARTIE \nVoulez-vous recommencer ? -oui - non').
-
-%l'utilisateur choisit de recommencer
-oui :- 
-    init.
-
-non :-
-    write('Merci d avoir joue ! Fin du jeu').
-
-% valable pour 2 joueurs
-victoire(1,X) :-
-    X =:= 9,
-    write('Joueur 1 a gagne ! '),
-    finJeu.
-
-victoire(2,X) :-
-    X =:= 1,
-    write('Joueur 2 a gagne ! '),
-    finJeu.
-
-ligneBlanche(X):-
-    atom_concat('carreBlanc1',X,Carre),
-    colorerCase(Carre,white),
-    atom_concat('carreBlanc2',X,Carre2),
-    colorerCase(Carre2,white),
-    atom_concat('carreBlanc3',X,Carre3),
-    colorerCase(Carre3,white),
-    atom_concat('carreBlanc4',X,Carre4),
-    colorerCase(Carre4,white),
-    atom_concat('carreBlanc5',X,Carre5),
-    colorerCase(Carre5,white),
-    atom_concat('carreBlanc6',X,Carre6),
-    colorerCase(Carre6,white),
-    atom_concat('carreBlanc7',X,Carre7),
-    colorerCase(Carre7,white),
-    atom_concat('carreBlanc8',X,Carre8),
-    colorerCase(Carre8,white),
-    atom_concat('carreBlanc9',X,Carre9),
-    colorerCase(Carre9,white).
-
-%grille blanche
-grilleBlanche:-
-    ligneBlanche(1),
-    ligneBlanche(2),
-    ligneBlanche(3),
-    ligneBlanche(4),
-    ligneBlanche(5),
-    ligneBlanche(6),
-    ligneBlanche(7),
-    ligneBlanche(8),
-    ligneBlanche(9).
-
-
-
-carre(X,Y,Z) :-
-    send(@fenetre, display, new(@Z, box(30,30)), point(X,Y)),
-    send(@Z, fill_pattern, colour(white)).
-
-affichageLigne(X) :-
-    Y is 50+(X-1)*40,
-    atom_concat('carreBlanc1',X,FinalString),
-    carre(50,Y,FinalString),
-    atom_concat('carreBlanc2',X,FinalString2),
-    carre(90,Y,FinalString2),
-    atom_concat('carreBlanc3',X,FinalString3),
-    carre(130,Y,FinalString3),
-    atom_concat('carreBlanc4',X,FinalString4),
-    carre(170,Y,FinalString4),
-    atom_concat('carreBlanc5',X,FinalString5),
-    carre(210,Y,FinalString5),
-    atom_concat('carreBlanc6',X,FinalString6),
-    carre(250,Y,FinalString6),
-    atom_concat('carreBlanc7',X,FinalString7),
-    carre(290,Y,FinalString7),
-    atom_concat('carreBlanc8',X,FinalString8),
-    carre(330,Y,FinalString8),
-    atom_concat('carreBlanc9',X,FinalString9),
-    carre(370,Y,FinalString9).
-
-initfenetre :-
-    new(@fenetre, picture('Quorridor')),
-    send(@fenetre, open).
-
-init :-
-    restart,
-    liberer,
-    % Création de la grille grise
-    send(@fenetre, display, new(@grilleBase, box(500,500))),
-    send(@grilleBase, fill_pattern, colour(grey)),
-
-    % création de la première ligne de carrés
-    affichageLigne(1),
-    affichageLigne(2),
-    affichageLigne(3),
-    affichageLigne(4),
-    affichageLigne(5),
-    affichageLigne(6),
-    affichageLigne(7),
-    affichageLigne(8),
-    affichageLigne(9),
-    %Création des murs
-    assert(listeMurs([@mur1,@mur2,@mur3,@mur4,@mur5,@mur6,@mur7,@mur8,@mur9,@mur10,@mur11,@mur12,@mur13,@mur14,@mur15,@mur16,@mur17,@mur18,@mur19,@mur20])),
-    assert(murs()),
-    consignes,
-        % Création des pions
-        %bleu(1,5, 10),
-        %rouge(9,5, 10).
-        bleu(3,5, 10),
-        rouge(3,4, 10).
-
-:- initfenetre.
-:- init.
