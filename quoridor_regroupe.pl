@@ -578,10 +578,27 @@ cheminExisteraEncore(D, X, Y, J):-
 	joueur(J,[Xj,Yj],_),
 	(J == 2, O is 9 ; J == 1, O is 1), %on inverse pour avoir l'adversaire
 	majRoute(D, X, Y),
-	(Xj < O,
+	((Xj < O,
 	chemin((Xj,Yj),(O,_),Chemin);
 	Xj > O,
-	chemin((O,_),(Xj,Yj),Chemin)).
+	chemin((O,_),(Xj,Yj),Chemin));
+	%on a verifie qu une route existait bien
+	%si la route existe tout va bien et on ne rentre pas ici
+	%soit la route existe pas, et donc on doit faire une maj
+	((Xj < O,
+	not(chemin((Xj,Yj),(O,_),Chemin));
+	Xj > O,
+	not(chemin((O,_),(Xj,Yj),Chemin))),
+	(D == v, X1 is X+1, Y1 is Y+1, 
+	retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
+	assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
+	(D == h, X1 is X+1, Y1 is Y+1, 
+	retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
+	assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
+	write("Poser ce mur empêchera l adversaire d accéder à la ligne d arrivee."),
+	1 =:= 0 %permet de retourner false
+	)
+	).
 
 	/*not(chemin((Xj,Yj),(O,_),Chemin)),
 	(D == v, X1 is X+1, Y1 is Y+1, 
@@ -612,7 +629,6 @@ mur(h,X,Y):-
     assert(joueur(J,[A,O],N1)), %on update le nb de murs restants du joueur
     assert(murs(h,X,Y)), %update la liste des murs
     (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
-	majRoute(h,X,Y),
     afficherCases(Ab,Or),!.
 
 %poser un mur vertical
@@ -633,7 +649,6 @@ mur(v,X,Y):-
     assert(joueur(J,[A,O],N1)), %on update le nb de murs restants du joueur
     assert(murs(v,X,Y)), %update la liste des murs
     (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
-	majRoute(v,X,Y),
     afficherCases(Ab,Or),!.
 
 
