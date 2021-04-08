@@ -375,11 +375,11 @@ chemin(Depart, Arrivee,CheminParcouru, CheminComplet):-
 %mise à jour des routes
 majRoute(D, X, Y):-
     (D == v, X1 is X+1, Y1 is Y+1,
-    retract(route((X,Y),(X,Y1),true)), retract(route((X1,Y),(X1,Y1),true)),
-    assert(route((X,Y),(X,Y1),false)), assert(route((X1,Y),(X1,Y1),false)));
+    retract(route((X,Y),(X,Y1),true)), retract(route((X1,Y),(X1,Y1),true)),retract(route((X,Y1),(X,Y),true)), retract(route((X1,Y1),(X1,Y),true)),
+    assert(route((X,Y),(X,Y1),false)), assert(route((X1,Y),(X1,Y1),false)), assert(route((X,Y1),(X,Y),false)), assert(route((X1,Y1),(X1,Y),false)));
     (D == h, X1 is X+1, Y1 is Y+1,
-    retract(route((X,Y),(X1,Y),true)), retract(route((X,Y1),(X1,Y1),true)),
-    assert(route((X,Y),(X1,Y),false)), assert(route((X,Y1),(X1,Y1),false))).
+    retract(route((X,Y),(X1,Y),true)), retract(route((X,Y1),(X1,Y1),true)),retract(route((X1,Y),(X,Y),true)), retract(route((X1,Y1),(X,Y1),true)),
+    assert(route((X,Y),(X1,Y),false)), assert(route((X,Y1),(X1,Y1),false)),assert(route((X1,Y),(X,Y),false)), assert(route((X1,Y1),(X,Y1),false))).
 
 %vérifier existence d'un chemin avant la pose du mur
 cheminExisteraEncore(D, X, Y, J):-
@@ -392,33 +392,33 @@ cheminExisteraEncore(D, X, Y, J):-
         ),
     %on annule la modif des chemins
         ((D == v, X1 is X+1, Y1 is Y+1,
-            retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
-            assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
+            retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),retract(route((X,Y1),(X,Y),false)), retract(route((X1,Y1),(X1,Y),false)),
+            assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)), assert(route((X,Y1),(X,Y),true)), assert(route((X1,Y1),(X1,Y),true)));
         (D == h, X1 is X+1, Y1 is Y+1,
-            retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
-            assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))
+            retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)), retract(route((X1,Y),(X,Y),false)), retract(route((X1,Y1),(X,Y1),false)),
+            assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true)), assert(route((X1,Y),(X,Y),true)), assert(route((X1,Y1),(X,Y1),true))
             )
         )
-    ;
+         ;
     %on a verifie qu une route existait bien
     %si la route existe tout va bien et on ne rentre pas ici
     %soit la route existe pas, on annule également la modif
-        
-            (Xj =< O, not(chemin((Xj,Yj),(O,_),Chemin));
-            (Xj > O, not(chemin((O,_),(Xj,Yj),Chemin)))),
-            write("test"),
-            (D == v, X1 is X+1, Y1 is Y+1,
-            retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
-            assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
-            (D == h, X1 is X+1, Y1 is Y+1,
-            retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
-            assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
-            write("Poser ce mur empechera l adversaire d acceder a la ligne d arrivee."),
-            1 =:= 0 %permet de retourner false
+    
+        (
+            Xj =< O, not(chemin((Xj,Yj),(O,_),Chemin));
+            Xj > O, not(chemin((O,_),(Xj,Yj),Chemin))
+        ),
+         (D == v, X1 is X+1, Y1 is Y+1,
+            retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),retract(route((X,Y1),(X,Y),false)), retract(route((X1,Y1),(X1,Y),false)),
+            assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)), assert(route((X,Y1),(X,Y),true)), assert(route((X1,Y1),(X1,Y),true)));
+          (D == h, X1 is X+1, Y1 is Y+1,
+          retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)), retract(route((X1,Y),(X,Y),false)), retract(route((X1,Y1),(X,Y1),false)),
+        assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true)), assert(route((X1,Y),(X,Y),true)), assert(route((X1,Y1),(X,Y1),true))),
+
+        write("Poser ce mur empechera l adversaire d acceder a la ligne d arrivee."),
+        1 =:= 0 %permet de retourner false*/
         
     ).
-
-
 
 %affichage des cases voisines jouables du point X,Y
 %X1 is X-1, X2 is X+1, Y1 is Y-1, Y2 is Y+1,
