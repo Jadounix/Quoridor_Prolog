@@ -284,48 +284,52 @@ Y1 is Y-1,Z is X-1,caseOccupee(Z,Y),bloqueBas(Z,Y),!,  Z2 is X-2, caseAccessible
 
 
 mur(J,h,X,Y):-
-X > 0, Y > 0,
-X < 9, Y < 9,
-joueur(J,[A,O],N),
-(N ==0,write("Vous n'avez plus de mur. Veuillez recommencer.");1==1),
-N >0,!,
-cheminExisteraEncore(h,X,Y,J),
-%chercheChemin(J,A,O),
-not(murhOccupe(X,Y)),
-not(murPerpendiculaire(X,Y)),
-grilleBlanche,
-retract(joueur(J,[A,O],N)),
-N1 is N-1,
-retract(listeMurs([Mur|Q])),
-murhorizontal(X,Y,Mur),
-asserta(listeMurs(Q)),
-assert(joueur(J,[A,O],N1)),
-assert(murs(h,X,Y)),
-(J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
-afficherCases(Ab,Or).
+    X > 0, Y > 0,
+    X < 9, Y < 9,
+    joueur(J,[A,O],N),
+    (N ==0, write("Vous n'avez plus de mur. Veuillez recommencer.");
+        N >0,!,
+        cheminExisteraEncore(h,X,Y,1), %verifie que le chemin existe encore pour J1
+        cheminExisteraEncore(h,X,Y,2), %verifie que le chemin existe encore pour J2
+        majRoute(h,X,Y),
+        %chercheChemin(J,A,O),
+        not(murhOccupe(X,Y)),
+        not(murPerpendiculaire(X,Y)),
+        grilleBlanche,
+        retract(joueur(J,[A,O],N)),
+        N1 is N-1,
+        retract(listeMurs([Mur|Q])),
+        murhorizontal(X,Y,Mur),
+        asserta(listeMurs(Q)),
+        assert(joueur(J,[A,O],N1)),
+        assert(murs(h,X,Y)),
+        (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
+        afficherCases(Ab,Or)).
 
 
 
-mur(J,v,X,Y):-
-X > 0, Y > 0,
-X < 9, Y < 9,
-joueur(J,[A,O],N),
-(N ==0,write("Vous n'avez plus de mur. Veuillez recommencer.");1==1),
-N >0,!,
-cheminExisteraEncore(v,X,Y,J),
-%chercheChemin(J,A,O),
-not(murvOccupe(X,Y)),
-not(murPerpendiculaire(X,Y)),
-grilleBlanche,
-retract(joueur(J,[A,O],N)),
-N1 is N-1,
-retract(listeMurs([Mur|Q])),
-murvertical(X,Y,Mur),
-asserta(listeMurs(Q)),
-assert(joueur(J,[A,O],N1)),
-assert(murs(v,X,Y)),
-(J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
-afficherCases(Ab,Or).
+    mur(J,v,X,Y):-
+        X > 0, Y > 0,
+        X < 9, Y < 9,
+        joueur(J,[A,O],N),
+        (   N==0, write("Vous n'avez plus de mur. Veuillez recommencer."); %soit il n'a plus de murs
+            N >0,!,
+            cheminExisteraEncore(v,X,Y,1), %verifie que le chemin existe encore pour J1
+            cheminExisteraEncore(v,X,Y,2), %verifie que le chemin existe encore pour J2
+            majRoute(v,X,Y),
+            not(murvOccupe(X,Y)),
+            not(murPerpendiculaire(X,Y)),
+            grilleBlanche,
+            retract(joueur(J,[A,O],N)),
+            N1 is N-1,
+            retract(listeMurs([Mur|Q])),
+            murvertical(X,Y,Mur),
+            asserta(listeMurs(Q)),
+            assert(joueur(J,[A,O],N1)),
+            assert(murs(v,X,Y)),
+            (J==1,joueur(2,[Ab,Or],_);J==2,joueur(1,[Ab,Or],_)),
+            afficherCases(Ab,Or)
+        ).
 
 %commandes plus rapideS
 mh1(X,Y):-
@@ -380,39 +384,39 @@ majRoute(D, X, Y):-
 %vérifier existence d'un chemin avant la pose du mur
 cheminExisteraEncore(D, X, Y, J):-
     joueur(J,[Xj,Yj],_),
-    (J == 2, O is 9 ; J == 1, O is 1), %on inverse pour avoir l'adversaire
+    (J == 1, O is 9 ; J == 2, O is 1),
     majRoute(D, X, Y),
-    ((Xj < O,
-    chemin((Xj,Yj),(O,_),Chemin);
-    Xj > O,
-    chemin((O,_),(Xj,Yj),Chemin));
+    (   (
+            Xj =< O, chemin((Xj,Yj),(O,_),Chemin);
+            Xj > O, chemin((O,_),(Xj,Yj),Chemin)
+        ),
+    %on annule la modif des chemins
+        ((D == v, X1 is X+1, Y1 is Y+1,
+            retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
+            assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
+        (D == h, X1 is X+1, Y1 is Y+1,
+            retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
+            assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))
+            )
+        )
+    ;
     %on a verifie qu une route existait bien
     %si la route existe tout va bien et on ne rentre pas ici
-    %soit la route existe pas, et donc on doit faire une maj
-    ((Xj < O,
-    not(chemin((Xj,Yj),(O,_),Chemin));
-    Xj > O,
-    not(chemin((O,_),(Xj,Yj),Chemin))),
-    (D == v, X1 is X+1, Y1 is Y+1,
-    retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
-    assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
-    (D == h, X1 is X+1, Y1 is Y+1,
-    retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
-    assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
-    write("Poser ce mur empêchera l adversaire d accéder à la ligne d arrivee."),
-    1 =:= 0 %permet de retourner false
-    )
+    %soit la route existe pas, on annule également la modif
+        
+            (Xj =< O, not(chemin((Xj,Yj),(O,_),Chemin));
+            (Xj > O, not(chemin((O,_),(Xj,Yj),Chemin)))),
+            write("test"),
+            (D == v, X1 is X+1, Y1 is Y+1,
+            retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
+            assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
+            (D == h, X1 is X+1, Y1 is Y+1,
+            retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
+            assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
+            write("Poser ce mur empechera l adversaire d acceder a la ligne d arrivee."),
+            1 =:= 0 %permet de retourner false
+        
     ).
-
-    /*not(chemin((Xj,Yj),(O,_),Chemin)),
-    (D == v, X1 is X+1, Y1 is Y+1,
-    retract(route((X,Y),(X,Y1),false)), retract(route((X1,Y),(X1,Y1),false)),
-    assert(route((X,Y),(X,Y1),true)), assert(route((X1,Y),(X1,Y1),true)));
-    (D == h, X1 is X+1, Y1 is Y+1,
-    retract(route((X,Y),(X1,Y),false)), retract(route((X,Y1),(X1,Y1),false)),
-    assert(route((X,Y),(X1,Y),true)), assert(route((X,Y1),(X1,Y1),true))),
-    write("Poser ce mur empêchera l'adversaire d'accéder à la ligne d'arrivée."),
-    1 =:= 0 %permet de retourner false*/
 
 
 
