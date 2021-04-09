@@ -291,10 +291,9 @@ mur(J,h,X,Y):-
         N >0,!,
         cheminExisteraEncore(h,X,Y,1), %verifie que le chemin existe encore pour J1
         cheminExisteraEncore(h,X,Y,2), %verifie que le chemin existe encore pour J2
-        majRoute(h,X,Y),
-        %chercheChemin(J,A,O),
         not(murhOccupe(X,Y)),
         not(murPerpendiculaire(X,Y)),
+        majRoute(h,X,Y),
         grilleBlanche,
         retract(joueur(J,[A,O],N)),
         N1 is N-1,
